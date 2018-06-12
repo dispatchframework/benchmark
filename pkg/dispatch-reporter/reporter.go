@@ -46,9 +46,14 @@ func (reporter *DispatchReporter) SpecSuiteDidEnd(summary *types.SuiteSummary) {
 	fmt.Printf("Outputting to %v as csv...\n", reporter.file)
 	var output *os.File
 	defer output.Close()
-	output, err := os.Create(reporter.file)
-	if err != nil {
-		log.Fatal("Unable to create file")
+	if _, err := os.Stat(reporter.file); os.IsNotExist(err) {
+		if output, err = os.Create(reporter.file); err != nil {
+			log.Fatal("Unable to open existing file")
+		}
+	} else {
+		if output, err = os.Open(reporter.file); err != nil {
+			log.Fatal("Unable to create file")
+		}
 	}
 	writer := csv.NewWriter(output)
 	defer writer.Flush()
