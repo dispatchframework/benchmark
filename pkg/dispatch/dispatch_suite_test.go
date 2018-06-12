@@ -1,12 +1,14 @@
 package dispatchBenchmark_test
 
 import (
+	"fmt"
 	"log"
 	"sync"
 	"testing"
 	"time"
 
 	. "github.com/nickaashoek/benchmark/pkg/dispatch"
+	. "github.com/nickaashoek/benchmark/pkg/dispatch-reporter"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -20,7 +22,10 @@ var (
 
 func TestDispatch(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Dispatch Suite")
+	fileName := fmt.Sprintf("./output-%v.csv", time.Now().Unix())
+	reporter := NewDispatchReporter(fileName)
+	reporters := []Reporter{reporter}
+	RunSpecsWithDefaultAndCustomReporters(t, "Dispatch Suite", reporters)
 }
 
 var _ = BeforeSuite(func() {
@@ -46,7 +51,6 @@ var _ = BeforeSuite(func() {
 	}
 	wg.Wait()
 	time.Sleep(10 * time.Second)
-
 })
 
 var _ = AfterSuite(func() {
@@ -62,6 +66,7 @@ var _ = Describe("Measuring Function Creation Times", func() {
 	var creationWorkers chan *Worker
 
 	BeforeEach(func() {
+		numWorkers = 1
 		testFunc = "./resources/functions/jsondump.py"
 		creationWorkers = make(chan *Worker, numWorkers)
 		for i := 0; i < numWorkers; i++ {
@@ -122,7 +127,7 @@ var _ = Describe("Measuring Function Creation Times", func() {
 	}, 1)
 })
 
-var _ = FDescribe("Measure execution time of functions", func() {
+var _ = Describe("Measure execution time of functions", func() {
 
 	Measure("The time it takes to run a mildly computationally intensive function", func(b Benchmarker) {
 		wk := <-workers
@@ -145,7 +150,7 @@ var _ = FDescribe("Measure execution time of functions", func() {
 		})
 	}, 1)
 
-	FMeasure("Running the same function in parallel", func(b Benchmarker) {
+	Measure("Running the same function in parallel", func(b Benchmarker) {
 		_ = b.Time("runtime", func() {
 			for i := 0; i < numWorkers; i++ {
 				wg.Add(1)
