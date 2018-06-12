@@ -51,16 +51,12 @@ func (reporter *DispatchReporter) SpecSuiteDidEnd(summary *types.SuiteSummary) {
 	var output *os.File
 	defer output.Close()
 	if _, err := os.Stat(reporter.file); os.IsNotExist(err) {
-		fmt.Printf("Doesn't exist: %v\n", os.IsNotExist(err))
-		fmt.Println(reporter.file)
 		if output, err = os.Create(reporter.file); err != nil {
-			fmt.Printf("Unable to create new file, %v\n", err)
-			log.Fatal("Unable to create new file")
+			log.Fatal("Unable to open existing file")
 		}
 	} else {
 		if output, err = os.Open(reporter.file); err != nil {
-			fmt.Printf("Unable to open file, %v\n", err)
-			log.Fatal("Unable to open file")
+			log.Fatal("Unable to create file")
 		}
 	}
 	writer := csv.NewWriter(output)
