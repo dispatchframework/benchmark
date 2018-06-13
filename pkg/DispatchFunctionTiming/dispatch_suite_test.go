@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/nickaashoek/benchmark/pkg/dispatch"
+	. "github.com/nickaashoek/benchmark/pkg/DispatchFunctionTiming"
 	. "github.com/nickaashoek/benchmark/pkg/dispatch-reporter"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -34,7 +34,7 @@ func init() {
 func TestDispatch(t *testing.T) {
 	RegisterFailHandler(Fail)
 	// outputFile = fmt.Sprintf("./output-%v.csv", time.Now().Unix())
-	reporter := NewDispatchReporter(outputFile)
+	reporter := NewDispatchReporter(outputFile, false, nil)
 	reporters := []Reporter{reporter}
 	RunSpecsWithDefaultAndCustomReporters(t, "Dispatch Suite", reporters)
 }
@@ -96,7 +96,7 @@ var _ = Describe("Measuring Function Creation Times", func() {
 		}
 	})
 
-	Measure("The time it takes to create a single function", func(b Benchmarker) {
+	FMeasure("The time it takes to create a single function", func(b Benchmarker) {
 		wk := <-creationWorkers
 		createtime := b.Time("createtime", func() {
 			createErr := wk.CreateFunction(testFunc)
