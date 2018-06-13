@@ -13,13 +13,17 @@ import (
 type DispatchReporter struct {
 	file         string
 	measurements map[string]types.SpecMeasurement
+	plot         bool
+	plotFunc     func(measurements map[string]types.SpecMeasurement)
 }
 
-func NewDispatchReporter(filename string) *DispatchReporter {
+func NewDispatchReporter(filename string, shouldPlot bool, plotter func(measurements map[string]types.SpecMeasurement)) *DispatchReporter {
 	records := make(map[string]types.SpecMeasurement)
 	return &DispatchReporter{
 		file:         filename,
 		measurements: records,
+		plot:         shouldPlot,
+		plotFunc:     plotter,
 	}
 }
 
@@ -74,4 +78,7 @@ func (reporter *DispatchReporter) SpecSuiteDidEnd(summary *types.SuiteSummary) {
 		}
 	}
 	fmt.Println("Finished outputting results to csv")
+	if reporter.plot {
+		reporter.plotFunc(reporter.measurements)
+	}
 }

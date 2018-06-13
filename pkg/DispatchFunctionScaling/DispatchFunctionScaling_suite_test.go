@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"sort"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -12,7 +14,12 @@ import (
 	. "github.com/nickaashoek/benchmark/pkg/DispatchFunctionTiming"
 	. "github.com/nickaashoek/benchmark/pkg/dispatch-reporter"
 	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/types"
 	. "github.com/onsi/gomega"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/plotutil"
+	"gonum.org/v1/plot/vg"
 )
 
 var (
@@ -21,6 +28,36 @@ var (
 	outputFile  string
 	runFunction *exec.Cmd
 )
+
+func MkPlot(measurements map[string]types.SpecMeasurement) {
+	p, err := plot.New()
+	if err != nil {
+		log.Fatal("Unable to create plot")
+	}
+	p.Title.Text = "Results of function scaling measurements"
+	p.X.Label.Text = "Number of functions run in parallel"
+	p.Y.Label.Text = "Time (s)"
+
+	var pts plotter.XYs
+	for _, measurement := range measurements {
+		execs, _ := strconv.ParseFloat(measurement.Name, 64)
+		fmt.Printf("Execs: %v, %s\n", execs, measurement.Name)
+		pts = append(pts, struct {
+			X float64
+			Y float64
+		}{execs, measurement.Average})
+	}
+	sort.Slice(pts[:], func(i, j int) bool {
+		return pts[i].X < pts[j].X
+	})
+	err = plotutil.AddLinePoints(p, "Scalability", pts)
+	if err != nil {
+		log.Fatal("Failed to add points")
+	}
+	if err := p.Save(4*vg.Inch, 4*vg.Inch, "points.png"); err != nil {
+		panic(err)
+	}
+}
 
 func parallelExec(runs int, command *exec.Cmd) {
 	for i := 0; i < runs; i++ {
@@ -45,7 +82,7 @@ func init() {
 func TestDispatchFunctionScaling(t *testing.T) {
 	RegisterFailHandler(Fail)
 	// outputFile = fmt.Sprintf("./output-%v.csv", time.Now().Unix())
-	reporter := NewDispatchReporter(outputFile)
+	reporter := NewDispatchReporter(outputFile, true, MkPlot)
 	reporters := []Reporter{reporter}
 	RunSpecsWithDefaultAndCustomReporters(t, "Dispatch Suite", reporters)
 }
@@ -69,49 +106,22 @@ var _ = AfterSuite(func() {
 })
 
 var _ = Describe("Testing a simple functions run at different scales", func() {
-	var command exec.Cmd
+	var (
+		command exec.Cmd
+	)
 	BeforeEach(func() {
 		command = *runFunction
 	})
-	Measure("Running the function once as a baseline", func(b Benchmarker) {
-		runtime := b.Time("Single run of function", func() {
-			err := command.Run()
-			if err != nil {
-				log.Fatalf("%s\n", err)
-			}
-			// Ω(err).Should(BeNil())
-		})
-		Ω(runtime.Seconds()).Should(BeNumerically("<", 3), "Function is simple, shouldn't take more than a few seconds")
-	}, 1)
-
-	Measure("Running the function four times in parallel", func(b Benchmarker) {
-		_ = b.Time("Parallel runs", func() {
-			parallelExec(4, runFunction)
-		})
-	}, 1)
-
-	Measure("Running the function 16 times in parallel", func(b Benchmarker) {
-		_ = b.Time("Parallel runs", func() {
-			parallelExec(16, runFunction)
-		})
-	}, 1)
-
-	Measure("Running the function 64 times in parallel", func(b Benchmarker) {
-		_ = b.Time("Parallel runs", func() {
-			parallelExec(64, runFunction)
-		})
-	}, 1)
-
-	Measure("Running the function 128 times in parallel", func(b Benchmarker) {
-		_ = b.Time("Parallel runs", func() {
-			parallelExec(128, runFunction)
-		})
-	}, 1)
-
-	Measure("Running the function 512 times in parallel", func(b Benchmarker) {
-		_ = b.Time("Parallel runs", func() {
-			parallelExec(512, runFunction)
-		})
-	}, 1)
-
+	MeasureRuntime := func(execs int) {
+		Measure(fmt.Sprintf("%v runs in parallel", execs), func(b Benchmarker) {
+			_ = b.Time(fmt.Sprintf("%v", execs), func() {
+				parallelExec(execs, runFunction)
+			})
+		}, 5)
+	}
+	Context("Running the function in parallel sets", func() {
+		for i := 1; i < 2048; i *= 2 {
+			MeasureRuntime(i)
+		}
+	})
 })
