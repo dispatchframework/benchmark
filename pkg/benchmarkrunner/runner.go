@@ -24,7 +24,6 @@ func runScaling(config TestConfig) {
 	fmt.Printf("Running Scalability Tests: %v\n", config)
 	var testExec *exec.Cmd
 	test := fmt.Sprintf("%v/benchmarkscale.test", config.Location)
-<<<<<<< HEAD
 	shouldPlot := fmt.Sprintf("-plot=%v", config.Plot)
 	if config.Output == "" {
 		testExec = exec.Command(test, shouldPlot)
@@ -33,21 +32,11 @@ func runScaling(config TestConfig) {
 		testExec = exec.Command(test, output, shouldPlot)
 	}
 	output, err := testExec.Output()
+
 	// Exit status 197 is a special error status used by ginkgo to reflect programatic focus,
 	// we don't want to report a test as failed in this case
 	if err != nil && err.Error() != "exit status 197" {
 		fmt.Printf("Error: %v, Output: %s\n", err, output)
-=======
-	if config.Output != "" {
-		testExec = exec.Command(test)
-	} else {
-		output := fmt.Sprintf("-outFile='./%v'", config.Output)
-		testExec = exec.Command(test, output)
-	}
-	output, err := testExec.Output()
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
->>>>>>> Beginnings of a unified script for running the tests
 		panic("Failed to run the scaling tests")
 	}
 	fmt.Printf("Results of running tests: \n%s", output)
@@ -57,7 +46,6 @@ func runScaling(config TestConfig) {
 func runTiming(config TestConfig) {
 	fmt.Println("Running Timing Tests")
 	var testExec *exec.Cmd
-<<<<<<< HEAD
 	shouldPlot := fmt.Sprintf("-plot=%v", config.Plot)
 	test := fmt.Sprintf("%v/benchmarktiming.test", config.Location)
 	if config.Output != "" {
@@ -67,21 +55,10 @@ func runTiming(config TestConfig) {
 		testExec = exec.Command(test, output, shouldPlot)
 	}
 	output, err := testExec.Output()
+
 	if err != nil && err.Error() != "exit status 197" {
 		fmt.Printf("Error: %v, Output: %s", err, output)
 		panic("Failed to run the timing tests")
-=======
-	test := fmt.Sprintf("%v/benchmarktiming.test", config.Location)
-	if config.Output != "" {
-		testExec = exec.Command(test)
-	} else {
-		output := fmt.Sprintf("-outFile='./%v'", config.Output)
-		testExec = exec.Command(test, output)
-	}
-	output, err := testExec.Output()
-	if err != nil {
-		panic("Failed to run the scaling tests")
->>>>>>> Beginnings of a unified script for running the tests
 	}
 	fmt.Printf("Results of running tests: \n%s", output)
 	fmt.Println("Finished timing scale tests")
