@@ -52,7 +52,7 @@ func TestDispatchFunctionScaling(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	testFunc = "../../resources/functions/test.py"
+	testFunc = "/Users/nkaashoek/go/src/github.com/nickaashoek/benchmark/resources/functions/test.py"
 	runFunction = exec.Command("dispatch", "exec", "scaling-test", "--wait")
 	createWorker := Worker{Me: 0, Function: "scaling-test"}
 	err := createWorker.CreateFunction(testFunc)

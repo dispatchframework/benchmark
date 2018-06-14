@@ -41,7 +41,7 @@ func TestDispatch(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	numWorkers = 4
-	testFunc = "../../resources/functions/jsondump.py"
+	testFunc = "/Users/nkaashoek/go/src/github.com/benchmark/resources/functions/jsondump.py"
 	workers = make(chan *Worker, numWorkers)
 	for i := 0; i < numWorkers; i++ {
 		name := RandomName(10)
