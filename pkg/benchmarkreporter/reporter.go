@@ -51,12 +51,16 @@ func (reporter *DispatchReporter) SpecSuiteDidEnd(summary *types.SuiteSummary) {
 	var output *os.File
 	defer output.Close()
 	if _, err := os.Stat(reporter.file); os.IsNotExist(err) {
+		fmt.Printf("Doesn't exist: %v\n", os.IsNotExist(err))
+		fmt.Println(reporter.file)
 		if output, err = os.Create(reporter.file); err != nil {
-			log.Fatal("Unable to open existing file")
+			fmt.Printf("Unable to create new file, %v\n", err)
+			log.Fatal("Unable to create new file")
 		}
 	} else {
 		if output, err = os.Open(reporter.file); err != nil {
-			log.Fatal("Unable to create file")
+			fmt.Printf("Unable to open file, %v\n", err)
+			log.Fatal("Unable to open file")
 		}
 	}
 	writer := csv.NewWriter(output)
@@ -74,6 +78,7 @@ func (reporter *DispatchReporter) SpecSuiteDidEnd(summary *types.SuiteSummary) {
 			fmt.Sprintf("%v", len(measurement.Results)),
 		}
 		if err := writer.Write(data); err != nil {
+			fmt.Println("Unable to write to csv file")
 			log.Fatal("Unable to write to csv file")
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"sync"
 	"testing"
@@ -21,11 +22,18 @@ var (
 	testFunc    string
 	outputFile  string
 	runFunction *exec.Cmd
+	shouldPlot  bool
 )
 
 func init() {
 	flag.StringVar(&outputFile, "outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
 		"Controls where the output of the tests are written")
+	fmt.Printf("OUTPUT FILE: %v\n", outputFile)
+	flag.StringVar(&testFunc, "function",
+		fmt.Sprintf("%v/src/github.com/nickaashoek/dispatchframework/resources/functions/test.py", os.Getenv("GOPATH")),
+		"What function to use to test")
+	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
+	fmt.Println(testFunc)
 }
 
 func parallelExec(runs int, command *exec.Cmd) {
@@ -45,14 +53,12 @@ func parallelExec(runs int, command *exec.Cmd) {
 
 func TestDispatchFunctionScaling(t *testing.T) {
 	RegisterFailHandler(Fail)
-	// outputFile = fmt.Sprintf("./output-%v.csv", time.Now().Unix())
-	reporter := NewDispatchReporter(outputFile, true, ScalePlot)
+	reporter := NewDispatchReporter(outputFile, shouldPlot, ScalePlot)
 	reporters := []Reporter{reporter}
 	RunSpecsWithDefaultAndCustomReporters(t, "Dispatch Suite", reporters)
 }
 
 var _ = BeforeSuite(func() {
-	testFunc = "../../resources/functions/test.py"
 	runFunction = exec.Command("dispatch", "exec", "scaling-test", "--wait")
 	createWorker := Worker{Me: 0, Function: "scaling-test"}
 	err := createWorker.CreateFunction(testFunc)
@@ -84,7 +90,7 @@ var _ = Describe("Testing a simple functions run at different scales", func() {
 		}, 5)
 	}
 	Context("Running the function in parallel sets", func() {
-		for i := 1; i < 4; i *= 2 {
+		for i := 1; i < 2; i *= 2 {
 			MeasureRuntime(i)
 		}
 	})

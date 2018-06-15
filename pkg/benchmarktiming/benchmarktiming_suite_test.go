@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -20,28 +21,29 @@ var (
 	numWorkers int
 	testFunc   string
 	outputFile string
-	cfgFile    string
+	shouldPlot bool
 )
 
 func init() {
 	fmt.Println("Running Init")
 	flag.StringVar(&outputFile, "OutputFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
 		"Controls where the output of the tests are written")
-	flag.StringVar(&cfgFile, "Configuration File", "", "Configure the way tests should be run")
+	flag.StringVar(&testFunc, "function",
+		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
+		"What function to use to test")
+	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
 	fmt.Println("Ran Init")
 }
 
 func TestDispatch(t *testing.T) {
 	RegisterFailHandler(Fail)
-	// outputFile = fmt.Sprintf("./output-%v.csv", time.Now().Unix())
-	reporter := NewDispatchReporter(outputFile, false, nil)
+	reporter := NewDispatchReporter(outputFile, shouldPlot, nil)
 	reporters := []Reporter{reporter}
 	RunSpecsWithDefaultAndCustomReporters(t, "Dispatch Suite", reporters)
 }
 
 var _ = BeforeSuite(func() {
 	numWorkers = 4
-	testFunc = "../../resources/functions/jsondump.py"
 	workers = make(chan *Worker, numWorkers)
 	for i := 0; i < numWorkers; i++ {
 		name := RandomName(10)
