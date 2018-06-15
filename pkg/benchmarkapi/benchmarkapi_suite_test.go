@@ -39,7 +39,7 @@ func init() {
 	flag.StringVar(&outputFile, "outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
 		"Controls where the output of the tests are written")
 	flag.StringVar(&testFunc, "function",
-		fmt.Sprintf("%v/src/github.com/nickaashoek/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
+		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
 		"What function to use to test")
 	flag.BoolVar(&shouldPlot, "plot", true, "Should a plot be produced")
 }

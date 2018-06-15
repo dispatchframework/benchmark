@@ -30,7 +30,7 @@ func init() {
 		"Controls where the output of the tests are written")
 	fmt.Printf("OUTPUT FILE: %v\n", outputFile)
 	flag.StringVar(&testFunc, "function",
-		fmt.Sprintf("%v/src/github.com/nickaashoek/dispatchframework/resources/functions/test.py", os.Getenv("GOPATH")),
+		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
 		"What function to use to test")
 	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
 	fmt.Println(testFunc)
