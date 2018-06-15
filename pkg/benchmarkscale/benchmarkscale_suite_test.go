@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/nickaashoek/benchmark/pkg/benchmarkplot"
-	. "github.com/nickaashoek/benchmark/pkg/benchmarkreporter"
-	. "github.com/nickaashoek/benchmark/pkg/benchmarktiming"
+	. "github.com/dispatchframework/benchmark/pkg/benchmarkplot"
+	. "github.com/dispatchframework/benchmark/pkg/benchmarkreporter"
+	. "github.com/dispatchframework/benchmark/pkg/benchmarktiming"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -30,7 +30,7 @@ func init() {
 		"Controls where the output of the tests are written")
 	fmt.Printf("OUTPUT FILE: %v\n", outputFile)
 	flag.StringVar(&testFunc, "function",
-		fmt.Sprintf("%v/src/github.com/nickaashoek/dispatchframework/resources/functions/test.py", os.Getenv("GOPATH")),
+		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
 		"What function to use to test")
 	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
 	fmt.Println(testFunc)

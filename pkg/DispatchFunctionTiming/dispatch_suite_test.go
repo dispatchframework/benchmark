@@ -1,16 +1,15 @@
-package benchmarktiming_test
+package dispatchBenchmark_test
 
 import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"sync"
 	"testing"
 	"time"
 
-	. "github.com/dispatchframework/benchmark/pkg/benchmarkreporter"
-	. "github.com/dispatchframework/benchmark/pkg/benchmarktiming"
+	. "github.com/nickaashoek/benchmark/pkg/dispatch"
+	. "github.com/nickaashoek/benchmark/pkg/dispatch-reporter"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -21,29 +20,28 @@ var (
 	numWorkers int
 	testFunc   string
 	outputFile string
-	shouldPlot bool
+	cfgFile    string
 )
 
 func init() {
 	fmt.Println("Running Init")
 	flag.StringVar(&outputFile, "OutputFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
 		"Controls where the output of the tests are written")
-	flag.StringVar(&testFunc, "function",
-		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
-		"What function to use to test")
-	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
+	flag.StringVar(&cfgFile, "Configuration File", "", "Configure the way tests should be run")
 	fmt.Println("Ran Init")
 }
 
 func TestDispatch(t *testing.T) {
 	RegisterFailHandler(Fail)
-	reporter := NewDispatchReporter(outputFile, shouldPlot, nil)
+	// outputFile = fmt.Sprintf("./output-%v.csv", time.Now().Unix())
+	reporter := NewDispatchReporter(outputFile)
 	reporters := []Reporter{reporter}
 	RunSpecsWithDefaultAndCustomReporters(t, "Dispatch Suite", reporters)
 }
 
 var _ = BeforeSuite(func() {
 	numWorkers = 4
+	testFunc = "../../resources/functions/jsondump.py"
 	workers = make(chan *Worker, numWorkers)
 	for i := 0; i < numWorkers; i++ {
 		name := RandomName(10)
@@ -98,7 +96,7 @@ var _ = Describe("Measuring Function Creation Times", func() {
 		}
 	})
 
-	FMeasure("The time it takes to create a single function", func(b Benchmarker) {
+	Measure("The time it takes to create a single function", func(b Benchmarker) {
 		wk := <-creationWorkers
 		createtime := b.Time("createtime", func() {
 			createErr := wk.CreateFunction(testFunc)

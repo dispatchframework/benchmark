@@ -17,6 +17,7 @@ type TestConfig struct {
 type RunnerConfig struct {
 	Scaling TestConfig `json:"Scale,omitempty"`
 	Timing  TestConfig `json:"Timing,omitempty"`
+	Api     TestConfig `json:"Api,omitempty"`
 }
 
 func ReadJson(path string) RunnerConfig {
