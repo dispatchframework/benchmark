@@ -153,17 +153,17 @@ var _ = FDescribe("How many calls can we get through in 1 seconds", func() {
 		var counter int64
 		Flood(&counter, 2)
 		b.RecordValue("2", float64(counter))
-	}, 50)
+	}, 10)
 	Measure("4 queriers", func(b Benchmarker) {
 		var counter int64
 		Flood(&counter, 4)
 		b.RecordValue("4", float64(counter))
-	}, 50)
+	}, 10)
 	Measure("8 queriers", func(b Benchmarker) {
 		var counter int64
 		Flood(&counter, 8)
 		b.RecordValue("8", float64(counter))
-	}, 50)
+	}, 10)
 
 })
 
