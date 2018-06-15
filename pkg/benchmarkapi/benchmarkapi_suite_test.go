@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/nickaashoek/benchmark/pkg/benchmarkplot"
-	. "github.com/nickaashoek/benchmark/pkg/benchmarkreporter"
-	. "github.com/nickaashoek/benchmark/pkg/benchmarktiming"
+	. "github.com/dispatchframework/benchmark/pkg/benchmarkplot"
+	. "github.com/dispatchframework/benchmark/pkg/benchmarkreporter"
+	. "github.com/dispatchframework/benchmark/pkg/benchmarktiming"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -153,17 +153,17 @@ var _ = FDescribe("How many calls can we get through in 1 seconds", func() {
 		var counter int64
 		Flood(&counter, 2)
 		b.RecordValue("2", float64(counter))
-	}, 10)
+	}, 20)
 	Measure("4 queriers", func(b Benchmarker) {
 		var counter int64
 		Flood(&counter, 4)
 		b.RecordValue("4", float64(counter))
-	}, 10)
+	}, 20)
 	Measure("8 queriers", func(b Benchmarker) {
 		var counter int64
 		Flood(&counter, 8)
 		b.RecordValue("8", float64(counter))
-	}, 10)
+	}, 20)
 
 })
 

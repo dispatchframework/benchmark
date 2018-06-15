@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/nickaashoek/benchmark/pkg/benchmarkplot"
-	. "github.com/nickaashoek/benchmark/pkg/benchmarkreporter"
-	. "github.com/nickaashoek/benchmark/pkg/benchmarktiming"
+	. "github.com/dispatchframework/benchmark/pkg/benchmarkplot"
+	. "github.com/dispatchframework/benchmark/pkg/benchmarkreporter"
+	. "github.com/dispatchframework/benchmark/pkg/benchmarktiming"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
