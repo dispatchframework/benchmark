@@ -10,7 +10,7 @@ import (
 type TestConfig struct {
 	ToRun    bool `json:"enabled"`
 	Plot     bool
-	Output   string
+	Output   string `json:"omitempty"`
 	Location string
 }
 

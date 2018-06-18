@@ -11,11 +11,11 @@ func main() {
 	config := ReadJson(args[0])
 	if config.Timing.ToRun {
 		fmt.Println("Run timing test")
-		runSuite(config.Api, "Timing", "benchmarktime")
+		runSuite(config.Timing, "Timing", "benchmarktiming")
 	}
 	if config.Scaling.ToRun {
 		fmt.Println("Run scaling test")
-		runSuite(config.Api, "Scale", "benchmarkscale")
+		runSuite(config.Scaling, "Scale", "benchmarkscale")
 	}
 	if config.Api.ToRun {
 		fmt.Println("Run api test")
