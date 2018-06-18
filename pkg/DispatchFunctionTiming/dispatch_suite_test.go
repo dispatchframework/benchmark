@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/nickaashoek/benchmark/pkg/dispatch"
-	. "github.com/nickaashoek/benchmark/pkg/dispatch-reporter"
+	. "github.com/dispatchframework/benchmark/pkg/dispatch"
+	. "github.com/dispatchframework/benchmark/pkg/dispatch-reporter"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
