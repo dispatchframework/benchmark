@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/nickaashoek/benchmark/pkg/DispatchFunctionTiming"
-	. "github.com/nickaashoek/benchmark/pkg/dispatch-reporter"
+	. "github.com/dispatchframework/benchmark/pkg/DispatchFunctionTiming"
+	. "github.com/dispatchframework/benchmark/pkg/dispatch-reporter"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
