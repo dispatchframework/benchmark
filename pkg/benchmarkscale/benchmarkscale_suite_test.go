@@ -23,21 +23,7 @@ var (
 	outputFile  string
 	runFunction *exec.Cmd
 	shouldPlot  bool
-	samples     *int
 )
-
-func init() {
-	flag.StringVar(&outputFile, "outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
-		"Controls where the output of the tests are written")
-	fmt.Printf("OUTPUT FILE: %v\n", outputFile)
-	flag.StringVar(&testFunc, "function",
-		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
-		"What function to use to test")
-	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
-	flag.IntVar(samples, "samples", 1, "Number of samples to be collected")
-	flag.Parse()
-	fmt.Println(testFunc)
-}
 
 func parallelExec(runs int, command *exec.Cmd) {
 	for i := 0; i < runs; i++ {
@@ -78,23 +64,34 @@ var _ = AfterSuite(func() {
 	}
 })
 
-var _ = Describe("Testing a simple functions run at different scales", func() {
+var _ = Describe("", func() {
+
 	var (
 		command exec.Cmd
+		samples int
 	)
-	BeforeEach(func() {
-		command = *runFunction
-	})
-	MeasureRuntime := func(execs int) {
-		Measure(fmt.Sprintf("%v runs in parallel", execs), func(b Benchmarker) {
-			_ = b.Time(fmt.Sprintf("%v", execs), func() {
-				parallelExec(execs, runFunction)
-			})
-		}, *samples)
-	}
-	Context("Running the function in parallel sets", func() {
-		for i := 1; i < 2; i *= 2 {
-			MeasureRuntime(i)
-		}
+	fmt.Printf("Samples: %v\n", samples)
+	flag.IntVar(&samples, "samples", 1, "Number of samples to be collected")
+	flag.StringVar(&outputFile, "outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
+		"Controls where the output of the tests are written")
+	fmt.Printf("OUTPUT FILE: %v\n", outputFile)
+	flag.StringVar(&testFunc, "function",
+		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
+		"What function to use to test")
+	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
+	flag.Parse()
+	Context("Testing a simple functions run at different scales", func() {
+		BeforeEach(func() {
+			command = *runFunction
+		})
+		Context("Running the function in parallel sets", func() {
+			for i := 1; i < 2; i *= 2 {
+				Measure(fmt.Sprintf("%v runs in parallel", i), func(b Benchmarker) {
+					_ = b.Time(fmt.Sprintf("%v", i), func() {
+						parallelExec(i, runFunction)
+					})
+				}, samples)
+			}
+		})
 	})
 })

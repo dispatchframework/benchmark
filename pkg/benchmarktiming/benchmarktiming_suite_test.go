@@ -25,19 +25,6 @@ var (
 	samples    int
 )
 
-func init() {
-	fmt.Println("Running Init")
-	flag.StringVar(&outputFile, "outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
-		"Controls where the output of the tests are written")
-	flag.StringVar(&testFunc, "function",
-		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
-		"What function to use to test")
-	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
-	flag.IntVar(&samples, "samples", 1, "Number of samples to be collected")
-	fmt.Printf("Samples: %v\n", samples)
-	fmt.Println("Ran Init")
-}
-
 func TestDispatch(t *testing.T) {
 	RegisterFailHandler(Fail)
 	reporter := NewDispatchReporter(outputFile, shouldPlot, nil)
@@ -46,7 +33,10 @@ func TestDispatch(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
+	// Parse the Flags here
+
 	numWorkers = 4
+	fmt.Println("Before")
 	workers = make(chan *Worker, numWorkers)
 	for i := 0; i < numWorkers; i++ {
 		name := RandomName(10)
@@ -78,11 +68,19 @@ var _ = AfterSuite(func() {
 })
 
 var _ = Describe("Measuring Function Creation Times", func() {
-
+	fmt.Println("Describe")
 	var creationWorkers chan *Worker
 
+	flag.StringVar(&outputFile, "outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
+		"Controls where the output of the tests are written")
+	flag.StringVar(&testFunc, "function",
+		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
+		"What function to use to test")
+	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
+	flag.IntVar(&samples, "samples", 1, "Number of samples to be collected")
+	flag.Parse()
+
 	BeforeEach(func() {
-		log.Println("Running BeforeEach")
 		creationWorkers = make(chan *Worker, numWorkers)
 		for i := 0; i < numWorkers; i++ {
 			name := RandomName(10)
@@ -93,7 +91,6 @@ var _ = Describe("Measuring Function Creation Times", func() {
 	})
 
 	AfterEach(func() {
-		log.Println("Running AfterEach")
 		DPrintf("Running AfterEach\n")
 		for i := 0; i < numWorkers; i++ {
 			wk := <-creationWorkers
@@ -101,8 +98,7 @@ var _ = Describe("Measuring Function Creation Times", func() {
 		}
 	})
 
-	FMeasure("The time it takes to create a single function", func(b Benchmarker) {
-		fmt.Printf("Samples: %v\n", samples)
+	Measure("The time it takes to create a single function", func(b Benchmarker) {
 		wk := <-creationWorkers
 		createtime := b.Time("createtime", func() {
 			createErr := wk.CreateFunction(testFunc)
@@ -146,7 +142,7 @@ var _ = Describe("Measuring Function Creation Times", func() {
 
 var _ = Describe("Measure execution time of functions", func() {
 
-	Measure("The time it takes to run a mildly computationally intensive function", func(b Benchmarker) {
+	FMeasure("The time it takes to run a mildly computationally intensive function", func(b Benchmarker) {
 		wk := <-workers
 		runTime := b.Time("runtime", func() {
 			runErr := wk.ExecuteFunction(true)

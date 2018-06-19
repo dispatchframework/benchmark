@@ -36,16 +36,6 @@ var (
 	samples    int
 )
 
-func init() {
-	flag.StringVar(&outputFile, "outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
-		"Controls where the output of the tests are written")
-	flag.StringVar(&testFunc, "function",
-		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
-		"What function to use to test")
-	flag.BoolVar(&shouldPlot, "plot", true, "Should a plot be produced")
-	flag.IntVar(&samples, "samples", 1, "Number of samples to be collected")
-}
-
 func TestBenchmarkapi(t *testing.T) {
 	RegisterFailHandler(Fail)
 	reporter := NewDispatchReporter(outputFile, shouldPlot, ApiThroughputPlot)
@@ -149,7 +139,16 @@ func Flood(counter *int64, queriers int) {
 
 var _ = Describe("How many calls can we get through in 1 seconds", func() {
 	// Want to get some idea of what throughput looks like
-	FMeasure("2 queriers", func(b Benchmarker) {
+	flag.StringVar(&outputFile, "outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
+		"Controls where the output of the tests are written")
+	flag.StringVar(&testFunc, "function",
+		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
+		"What function to use to test")
+	flag.BoolVar(&shouldPlot, "plot", true, "Should a plot be produced")
+	flag.IntVar(&samples, "samples", 1, "Number of samples to be collected")
+	flag.Parse()
+
+	Measure("2 queriers", func(b Benchmarker) {
 		var counter int64
 		Flood(&counter, 2)
 		b.RecordValue("2", float64(counter))
@@ -168,7 +167,7 @@ var _ = Describe("How many calls can we get through in 1 seconds", func() {
 })
 
 var _ = Describe("How long does it take to get a response from an API endpoint?", func() {
-	Measure("How much overhead is there?", func(b Benchmarker) {
+	FMeasure("How much overhead is there?", func(b Benchmarker) {
 		functionRuntime := b.Time("Time for function to run", func() {
 			runFunction := exec.Command("dispatch", "exec", "api-target", "--wait")
 			err := runFunction.Run()
