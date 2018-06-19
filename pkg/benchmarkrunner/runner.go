@@ -11,11 +11,11 @@ func main() {
 	config := ReadJson(args[0])
 	if config.Timing.ToRun {
 		fmt.Println("Run timing test")
-		runSuite(config.Api, "Timing", "benchmarktime")
+		runSuite(config.Timing, "Timing", "benchmarktiming")
 	}
 	if config.Scaling.ToRun {
 		fmt.Println("Run scaling test")
-		runSuite(config.Api, "Scale", "benchmarkscale")
+		runSuite(config.Scaling, "Scale", "benchmarkscale")
 	}
 	if config.Api.ToRun {
 		fmt.Println("Run api test")
@@ -28,11 +28,12 @@ func runSuite(config TestConfig, testName string, location string) {
 	var testExec *exec.Cmd
 	test := fmt.Sprintf("%v/%v.test", config.Location, location)
 	shouldPlot := fmt.Sprintf("-plot=%v", config.Plot)
+	samples := fmt.Sprintf("-samples=%v", config.Samples)
 	if config.Output == "" {
-		testExec = exec.Command(test, shouldPlot)
+		testExec = exec.Command(test, shouldPlot, samples)
 	} else {
 		output := fmt.Sprintf("-outFile=%v/%v", os.Getenv("PWD"), config.Output)
-		testExec = exec.Command(test, output, shouldPlot)
+		testExec = exec.Command(test, output, shouldPlot, samples)
 	}
 	output, err := testExec.Output()
 
