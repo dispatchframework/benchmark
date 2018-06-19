@@ -25,6 +25,7 @@ func ReadJson(path string) RunnerConfig {
 	fmt.Printf("Grabbing config from %s\n", path)
 	rawConfig, err := ioutil.ReadFile(path)
 	if err != nil {
+		fmt.Printf("ERROR: %v\n", err)
 		panic("Unable to read provided configuration file")
 	}
 	var config RunnerConfig

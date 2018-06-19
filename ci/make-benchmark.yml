@@ -1,0 +1,37 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: vmware/dispatch-golang-ci
+    tag: "1.10"
+
+inputs:
+- name: bmk
+  path: src/github.com/dispatchframework/benchmark
+
+run:
+  path: /bin/bash
+  args:
+  - -c
+  - |
+    set -e -u -x
+
+    export GOPATH=$PWD
+
+    export PATH=$PATH:$GOPATH/bin
+
+    ls src/github.com/dispatchframework/benchmark/pkg/benchmarkscale
+
+    cd src/github.com/dispatchframework/benchmark
+    
+    dep ensure
+
+    make install-ginkgo
+ 
+    ginkgo build ./pkg/benchmarktiming; ginkgo build ./pkg/benchmarkapi; ginkgo build ./pkg/benchmarkscale;
+
+    go install ./pkg/benchmarkrunner    
+
+    echo Finished!
