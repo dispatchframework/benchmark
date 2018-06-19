@@ -22,6 +22,7 @@ var (
 	testFunc   string
 	outputFile string
 	shouldPlot bool
+	samples    int
 )
 
 func init() {
@@ -32,6 +33,8 @@ func init() {
 		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
 		"What function to use to test")
 	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
+	flag.IntVar(&samples, "samples", 1, "Number of samples to be collected")
+	fmt.Printf("Samples: %v\n", samples)
 	fmt.Println("Ran Init")
 }
 
@@ -98,7 +101,8 @@ var _ = Describe("Measuring Function Creation Times", func() {
 		}
 	})
 
-	Measure("The time it takes to create a single function", func(b Benchmarker) {
+	FMeasure("The time it takes to create a single function", func(b Benchmarker) {
+		fmt.Printf("Samples: %v\n", samples)
 		wk := <-creationWorkers
 		createtime := b.Time("createtime", func() {
 			createErr := wk.CreateFunction(testFunc)
@@ -106,7 +110,7 @@ var _ = Describe("Measuring Function Creation Times", func() {
 		})
 		creationWorkers <- wk
 		DPrintf("Took %v seconds to create a single function\n", createtime)
-	}, 5)
+	}, samples)
 
 	Measure("Time it takes to create multiple functions in series", func(b Benchmarker) {
 		runtime := b.Time("runtime", func() {
@@ -118,7 +122,7 @@ var _ = Describe("Measuring Function Creation Times", func() {
 			}
 		})
 		DPrintf("Run took %v second\n", runtime)
-	}, 5)
+	}, samples)
 
 	Measure("Time it takes to create functions in parallel", func(b Benchmarker) {
 		runtime := b.Time("runtime", func() {
@@ -137,7 +141,7 @@ var _ = Describe("Measuring Function Creation Times", func() {
 			DPrintf("Finished\n")
 		})
 		DPrintf("Run took %v second\n", runtime)
-	}, 5)
+	}, samples)
 })
 
 var _ = Describe("Measure execution time of functions", func() {
@@ -150,7 +154,7 @@ var _ = Describe("Measure execution time of functions", func() {
 		})
 		workers <- wk
 		DPrintf("Run took %v seconds\n", runTime)
-	}, 5)
+	}, samples)
 
 	Measure("Running the same function in series", func(b Benchmarker) {
 		_ = b.Time("runtime", func() {
@@ -162,7 +166,7 @@ var _ = Describe("Measure execution time of functions", func() {
 				workers <- wk
 			}
 		})
-	}, 5)
+	}, samples)
 
 	Measure("Running the same function in parallel", func(b Benchmarker) {
 		_ = b.Time("runtime", func() {
@@ -179,6 +183,6 @@ var _ = Describe("Measure execution time of functions", func() {
 			}
 			wg.Wait()
 		})
-	}, 5)
+	}, samples)
 
 })

@@ -33,6 +33,7 @@ var (
 	outputFile string
 	endpoint   Endpoint
 	shouldPlot bool
+	samples    int
 )
 
 func init() {
@@ -42,6 +43,7 @@ func init() {
 		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
 		"What function to use to test")
 	flag.BoolVar(&shouldPlot, "plot", true, "Should a plot be produced")
+	flag.IntVar(&samples, "samples", 1, "Number of samples to be collected")
 }
 
 func TestBenchmarkapi(t *testing.T) {
@@ -87,8 +89,6 @@ var _ = BeforeSuite(func() {
 	if err != nil {
 		log.Fatalf("Unable to run the target function: %v\n", err)
 	}
-
-	log.Println("Finished creating the api endpoint")
 })
 
 var _ = AfterSuite(func() {
@@ -147,23 +147,23 @@ func Flood(counter *int64, queriers int) {
 	atomic.StoreInt64(&stop, 1)
 }
 
-var _ = FDescribe("How many calls can we get through in 1 seconds", func() {
+var _ = Describe("How many calls can we get through in 1 seconds", func() {
 	// Want to get some idea of what throughput looks like
-	Measure("2 queriers", func(b Benchmarker) {
+	FMeasure("2 queriers", func(b Benchmarker) {
 		var counter int64
 		Flood(&counter, 2)
 		b.RecordValue("2", float64(counter))
-	}, 20)
+	}, samples)
 	Measure("4 queriers", func(b Benchmarker) {
 		var counter int64
 		Flood(&counter, 4)
 		b.RecordValue("4", float64(counter))
-	}, 20)
+	}, samples)
 	Measure("8 queriers", func(b Benchmarker) {
 		var counter int64
 		Flood(&counter, 8)
 		b.RecordValue("8", float64(counter))
-	}, 20)
+	}, samples)
 
 })
 
@@ -193,5 +193,5 @@ var _ = Describe("How long does it take to get a response from an API endpoint?"
 			}
 		})
 		b.RecordValue("Approximate overhead of using the API endpoint", apiRuntime.Seconds()-functionRuntime.Seconds())
-	}, 10)
+	}, samples)
 })

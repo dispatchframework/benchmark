@@ -12,6 +12,7 @@ type TestConfig struct {
 	Plot     bool
 	Output   string `json:"omitempty"`
 	Location string
+	Samples  int
 }
 
 type RunnerConfig struct {

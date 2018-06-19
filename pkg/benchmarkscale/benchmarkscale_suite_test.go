@@ -23,6 +23,7 @@ var (
 	outputFile  string
 	runFunction *exec.Cmd
 	shouldPlot  bool
+	samples     *int
 )
 
 func init() {
@@ -33,6 +34,8 @@ func init() {
 		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
 		"What function to use to test")
 	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
+	flag.IntVar(samples, "samples", 1, "Number of samples to be collected")
+	flag.Parse()
 	fmt.Println(testFunc)
 }
 
@@ -87,7 +90,7 @@ var _ = Describe("Testing a simple functions run at different scales", func() {
 			_ = b.Time(fmt.Sprintf("%v", execs), func() {
 				parallelExec(execs, runFunction)
 			})
-		}, 5)
+		}, *samples)
 	}
 	Context("Running the function in parallel sets", func() {
 		for i := 1; i < 2; i *= 2 {

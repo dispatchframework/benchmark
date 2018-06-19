@@ -28,11 +28,12 @@ func runSuite(config TestConfig, testName string, location string) {
 	var testExec *exec.Cmd
 	test := fmt.Sprintf("%v/%v.test", config.Location, location)
 	shouldPlot := fmt.Sprintf("-plot=%v", config.Plot)
+	samples := fmt.Sprintf("-samples=%v", config.Samples)
 	if config.Output == "" {
-		testExec = exec.Command(test, shouldPlot)
+		testExec = exec.Command(test, shouldPlot, samples)
 	} else {
 		output := fmt.Sprintf("-outFile=%v/%v", os.Getenv("PWD"), config.Output)
-		testExec = exec.Command(test, output, shouldPlot)
+		testExec = exec.Command(test, output, shouldPlot, samples)
 	}
 	output, err := testExec.Output()
 
