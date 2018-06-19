@@ -19,21 +19,32 @@ var (
 	wg         sync.WaitGroup
 	workers    chan *Worker
 	numWorkers int
-	testFunc   string
-	outputFile string
-	shouldPlot bool
-	samples    int
 )
+
+/*
+	Obviously this isn't the prettiest, however we could like to have access to command line flags
+	in the package-level anonymous variables that define the tests. Specifically, we want to be able
+	to control the number of samples each measurement should be taken. Were this to be done in an init()
+	function (as would be proper), the flags would be parsed AFTER the anonymous variables are evaluated,
+	leading to problems. Perhap this suggests we shouldn't be using Ginkgo at all...
+*/
+
+var outputFile = flag.String("outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
+	"Controls where the output of the tests are written")
+var testFunc = flag.String("function",
+	fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
+	"What function to use to test")
+var shouldPlot = flag.Bool("plot", false, "Should a plot be produced")
+var samples = flag.Int("samples", 1, "Number of samples to be collected")
 
 func TestDispatch(t *testing.T) {
 	RegisterFailHandler(Fail)
-	reporter := NewDispatchReporter(outputFile, shouldPlot, nil)
+	reporter := NewDispatchReporter(*outputFile, *shouldPlot, nil)
 	reporters := []Reporter{reporter}
 	RunSpecsWithDefaultAndCustomReporters(t, "Dispatch Suite", reporters)
 }
 
 var _ = BeforeSuite(func() {
-	// Parse the Flags here
 
 	numWorkers = 4
 	fmt.Println("Before")
@@ -52,7 +63,7 @@ var _ = BeforeSuite(func() {
 			defer GinkgoRecover()
 			createErr := wk.CreateFunction(location)
 			Ω(createErr).Should(BeNil())
-		}(testFunc, wk)
+		}(*testFunc, wk)
 		workers <- wk
 	}
 	wg.Wait()
@@ -68,16 +79,9 @@ var _ = AfterSuite(func() {
 })
 
 var _ = Describe("Measuring Function Creation Times", func() {
-	fmt.Println("Describe")
+
 	var creationWorkers chan *Worker
 
-	flag.StringVar(&outputFile, "outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
-		"Controls where the output of the tests are written")
-	flag.StringVar(&testFunc, "function",
-		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
-		"What function to use to test")
-	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
-	flag.IntVar(&samples, "samples", 1, "Number of samples to be collected")
 	flag.Parse()
 
 	BeforeEach(func() {
@@ -101,24 +105,24 @@ var _ = Describe("Measuring Function Creation Times", func() {
 	Measure("The time it takes to create a single function", func(b Benchmarker) {
 		wk := <-creationWorkers
 		createtime := b.Time("createtime", func() {
-			createErr := wk.CreateFunction(testFunc)
+			createErr := wk.CreateFunction(*testFunc)
 			Ω(createErr).Should(BeNil())
 		})
 		creationWorkers <- wk
 		DPrintf("Took %v seconds to create a single function\n", createtime)
-	}, samples)
+	}, *samples)
 
 	Measure("Time it takes to create multiple functions in series", func(b Benchmarker) {
 		runtime := b.Time("runtime", func() {
 			for i := 0; i < numWorkers; i++ {
 				wk := <-creationWorkers
-				createErr := wk.CreateFunction(testFunc)
+				createErr := wk.CreateFunction(*testFunc)
 				Ω(createErr).Should(BeNil())
 				creationWorkers <- wk
 			}
 		})
 		DPrintf("Run took %v second\n", runtime)
-	}, samples)
+	}, *samples)
 
 	Measure("Time it takes to create functions in parallel", func(b Benchmarker) {
 		runtime := b.Time("runtime", func() {
@@ -130,14 +134,14 @@ var _ = Describe("Measuring Function Creation Times", func() {
 					defer GinkgoRecover()
 					createErr := wk.CreateFunction(location)
 					Ω(createErr).Should(BeNil())
-				}(testFunc, wk)
+				}(*testFunc, wk)
 				creationWorkers <- wk
 			}
 			wg.Wait()
 			DPrintf("Finished\n")
 		})
 		DPrintf("Run took %v second\n", runtime)
-	}, samples)
+	}, *samples)
 })
 
 var _ = Describe("Measure execution time of functions", func() {
@@ -150,7 +154,7 @@ var _ = Describe("Measure execution time of functions", func() {
 		})
 		workers <- wk
 		DPrintf("Run took %v seconds\n", runTime)
-	}, samples)
+	}, *samples)
 
 	Measure("Running the same function in series", func(b Benchmarker) {
 		_ = b.Time("runtime", func() {
@@ -162,7 +166,7 @@ var _ = Describe("Measure execution time of functions", func() {
 				workers <- wk
 			}
 		})
-	}, samples)
+	}, *samples)
 
 	Measure("Running the same function in parallel", func(b Benchmarker) {
 		_ = b.Time("runtime", func() {
@@ -179,6 +183,6 @@ var _ = Describe("Measure execution time of functions", func() {
 			}
 			wg.Wait()
 		})
-	}, samples)
+	}, *samples)
 
 })

@@ -19,11 +19,24 @@ import (
 
 var (
 	wg          sync.WaitGroup
-	testFunc    string
-	outputFile  string
 	runFunction *exec.Cmd
-	shouldPlot  bool
 )
+
+/*
+	Obviously this isn't the prettiest, however we could like to have access to command line flags
+	in the package-level anonymous variables that define the tests. Specifically, we want to be able
+	to control the number of samples each measurement should be taken. Were this to be done in an init()
+	function (as would be proper), the flags would be parsed AFTER the anonymous variables are evaluated,
+	leading to problems. Perhap this suggests we shouldn't be using Ginkgo at all...
+*/
+
+var outputFile = flag.String("outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
+	"Controls where the output of the tests are written")
+var testFunc = flag.String("function",
+	fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
+	"What function to use to test")
+var shouldPlot = flag.Bool("plot", false, "Should a plot be produced")
+var samples = flag.Int("samples", 1, "Number of samples to be collected")
 
 func parallelExec(runs int, command *exec.Cmd) {
 	for i := 0; i < runs; i++ {
@@ -42,7 +55,7 @@ func parallelExec(runs int, command *exec.Cmd) {
 
 func TestDispatchFunctionScaling(t *testing.T) {
 	RegisterFailHandler(Fail)
-	reporter := NewDispatchReporter(outputFile, shouldPlot, ScalePlot)
+	reporter := NewDispatchReporter(*outputFile, *shouldPlot, ScalePlot)
 	reporters := []Reporter{reporter}
 	RunSpecsWithDefaultAndCustomReporters(t, "Dispatch Suite", reporters)
 }
@@ -50,7 +63,7 @@ func TestDispatchFunctionScaling(t *testing.T) {
 var _ = BeforeSuite(func() {
 	runFunction = exec.Command("dispatch", "exec", "scaling-test", "--wait")
 	createWorker := Worker{Me: 0, Function: "scaling-test"}
-	err := createWorker.CreateFunction(testFunc)
+	err := createWorker.CreateFunction(*testFunc)
 	if err != nil {
 		log.Fatal("Failed to create the function")
 	}
@@ -66,20 +79,9 @@ var _ = AfterSuite(func() {
 
 var _ = Describe("", func() {
 
-	var (
-		command exec.Cmd
-		samples int
-	)
-	fmt.Printf("Samples: %v\n", samples)
-	flag.IntVar(&samples, "samples", 1, "Number of samples to be collected")
-	flag.StringVar(&outputFile, "outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
-		"Controls where the output of the tests are written")
-	fmt.Printf("OUTPUT FILE: %v\n", outputFile)
-	flag.StringVar(&testFunc, "function",
-		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
-		"What function to use to test")
-	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
 	flag.Parse()
+
+	var command exec.Cmd
 	Context("Testing a simple functions run at different scales", func() {
 		BeforeEach(func() {
 			command = *runFunction
@@ -90,7 +92,7 @@ var _ = Describe("", func() {
 					_ = b.Time(fmt.Sprintf("%v", i), func() {
 						parallelExec(i, runFunction)
 					})
-				}, samples)
+				}, *samples)
 			}
 		})
 	})

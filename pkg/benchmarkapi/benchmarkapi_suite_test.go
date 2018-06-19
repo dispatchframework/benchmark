@@ -28,17 +28,21 @@ type Endpoint struct {
 }
 
 var (
-	wg         sync.WaitGroup
-	testFunc   string
-	outputFile string
-	endpoint   Endpoint
-	shouldPlot bool
-	samples    int
+	wg       sync.WaitGroup
+	endpoint Endpoint
 )
+
+var outputFile = flag.String("outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
+	"Controls where the output of the tests are written")
+var testFunc = flag.String("function",
+	fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
+	"What function to use to test")
+var shouldPlot = flag.Bool("plot", false, "Should a plot be produced")
+var samples = flag.Int("samples", 1, "Number of samples to be collected")
 
 func TestBenchmarkapi(t *testing.T) {
 	RegisterFailHandler(Fail)
-	reporter := NewDispatchReporter(outputFile, shouldPlot, ApiThroughputPlot)
+	reporter := NewDispatchReporter(*outputFile, *shouldPlot, ApiThroughputPlot)
 	reporters := []Reporter{reporter}
 	RunSpecsWithDefaultAndCustomReporters(t, "Dispatch Suite", reporters)
 }
@@ -46,7 +50,7 @@ func TestBenchmarkapi(t *testing.T) {
 var _ = BeforeSuite(func() {
 	// Setup the API Target Function
 	setupWorker := Worker{Me: 1, Function: "api-target"}
-	err := setupWorker.CreateFunction(testFunc)
+	err := setupWorker.CreateFunction(*testFunc)
 	if err != nil {
 		log.Fatal("Unable to setup initial function")
 	}
@@ -139,30 +143,24 @@ func Flood(counter *int64, queriers int) {
 
 var _ = Describe("How many calls can we get through in 1 seconds", func() {
 	// Want to get some idea of what throughput looks like
-	flag.StringVar(&outputFile, "outFile", fmt.Sprintf("./output-%v.csv", time.Now().Unix()),
-		"Controls where the output of the tests are written")
-	flag.StringVar(&testFunc, "function",
-		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
-		"What function to use to test")
-	flag.BoolVar(&shouldPlot, "plot", true, "Should a plot be produced")
-	flag.IntVar(&samples, "samples", 1, "Number of samples to be collected")
+
 	flag.Parse()
 
 	Measure("2 queriers", func(b Benchmarker) {
 		var counter int64
 		Flood(&counter, 2)
 		b.RecordValue("2", float64(counter))
-	}, samples)
+	}, *samples)
 	Measure("4 queriers", func(b Benchmarker) {
 		var counter int64
 		Flood(&counter, 4)
 		b.RecordValue("4", float64(counter))
-	}, samples)
+	}, *samples)
 	Measure("8 queriers", func(b Benchmarker) {
 		var counter int64
 		Flood(&counter, 8)
 		b.RecordValue("8", float64(counter))
-	}, samples)
+	}, *samples)
 
 })
 
@@ -192,5 +190,5 @@ var _ = Describe("How long does it take to get a response from an API endpoint?"
 			}
 		})
 		b.RecordValue("Approximate overhead of using the API endpoint", apiRuntime.Seconds()-functionRuntime.Seconds())
-	}, samples)
+	}, *samples)
 })
