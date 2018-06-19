@@ -167,7 +167,7 @@ var _ = Describe("How many calls can we get through in 1 seconds", func() {
 })
 
 var _ = Describe("How long does it take to get a response from an API endpoint?", func() {
-	FMeasure("How much overhead is there?", func(b Benchmarker) {
+	Measure("How much overhead is there?", func(b Benchmarker) {
 		functionRuntime := b.Time("Time for function to run", func() {
 			runFunction := exec.Command("dispatch", "exec", "api-target", "--wait")
 			err := runFunction.Run()

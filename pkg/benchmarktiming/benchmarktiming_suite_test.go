@@ -142,7 +142,7 @@ var _ = Describe("Measuring Function Creation Times", func() {
 
 var _ = Describe("Measure execution time of functions", func() {
 
-	FMeasure("The time it takes to run a mildly computationally intensive function", func(b Benchmarker) {
+	Measure("The time it takes to run a mildly computationally intensive function", func(b Benchmarker) {
 		wk := <-workers
 		runTime := b.Time("runtime", func() {
 			runErr := wk.ExecuteFunction(true)
