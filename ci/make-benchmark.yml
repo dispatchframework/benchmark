@@ -8,7 +8,7 @@ image_resource:
     tag: "1.10"
 
 inputs:
-- name: bmk
+- name: benchmark
   path: src/github.com/dispatchframework/benchmark
 
 run:
