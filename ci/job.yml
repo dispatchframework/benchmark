@@ -1,0 +1,42 @@
+---
+resources:
+- name: benchmark-master
+  type: git
+  source:
+    uri: https://github.com/dispatchframework/benchmark
+    branch: nkaashoek-ci
+
+- name: dispatch-master
+  type: git
+  source:
+    uri: https://github.com/vmware/dispatch.git
+    branch: master
+
+jobs:
+- name: benchmarker
+  public: true
+  plan:
+  - get: benchmark
+    resource: benchmark-master
+  - get: dispatch
+    resource: dispatch-master    
+  - task: build-cli
+    file: dispatch/ci/e2e/build-cli.yml
+  - task: setup-gke-cluster
+    file: benchmark/ci/use-cluster.yml
+    params:
+      GKE_KEY: ((gke-key))
+      GKE_PROJECT_ID: ((gke-project-id))
+  # - task: deploy-dispatch
+  #   file: dispatch/ci/e2e/deploy-dispatch.yml
+  #   input_mapping:
+  #     cluster: k8s-cluster
+  #     properties: keyval
+  #   params:
+  #     GKE_KEY: ((gke-key))
+  #     GKE_PROJECT_ID: ((gke-project-id))
+  #     DOCKER_REGISTRY_HOST: ((ci-registry-org.gcr))
+  #     FAAS: riff
+  #     EVENT_TRANSPORT: kafka
+
+
