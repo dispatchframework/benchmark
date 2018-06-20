@@ -26,12 +26,14 @@ run:
 
     cd src/github.com/dispatchframework/benchmark
     
-    dep ensure
-
     make install-ginkgo
  
     ginkgo build ./pkg/benchmarktiming; ginkgo build ./pkg/benchmarkapi; ginkgo build ./pkg/benchmarkscale;
 
-    go install ./pkg/benchmarkrunner    
+    go install ./pkg/benchmarkrunner
+
+    ls pkg/benchmarkscale
+
+    benchmarkrunner ./ci/config.yaml
 
     echo Finished!
