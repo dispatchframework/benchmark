@@ -1,4 +1,4 @@
----
+b---
 platform: linux
 
 image_resource:
@@ -31,9 +31,5 @@ run:
     ginkgo build ./pkg/benchmarktiming; ginkgo build ./pkg/benchmarkapi; ginkgo build ./pkg/benchmarkscale;
 
     go install ./pkg/benchmarkrunner
-
-    ls pkg/benchmarkscale
-
-    benchmarkrunner ./ci/config.yaml
-
+    
     echo Finished!

@@ -8,8 +8,8 @@ image_resource:
     tag: "1.10"
 
 inputs:
-- name: dispatch
-- name: dispatch-cli
+- name: bmk
+  path: src/github.com/dispatchframework/benchmark
 
 run:
   path: /bin/bash
@@ -17,7 +17,9 @@ run:
   - -c
   - |
     set -e -u -x
-    
-    echo $PWD
-    echo ${GKE_KEY} | base64 --decode --ignore-garbage > test
-    cat test
+
+    export GOPATH=$PWD
+
+    export PATH=$PATH:$GOPATH/bin
+
+    benchmarkrunner ./ci/config.yaml

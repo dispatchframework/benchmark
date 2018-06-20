@@ -1,18 +1,18 @@
 Scale:
-  enabled: true
+  enabled: false
   plot: false
   output: "outScale.csv"
-  Location: "pkg/benchmarkscale"
+  Location: "./pkg/benchmarkscale"
   Samples: 2
 Timing:
   enabled: false
   plot: false
   output: "outTime.csv"
-  Location: "pkg/benchmarktiming"
+  Location: "./pkg/benchmarktiming"
   samples: 2
 Api:
   enabled: false
   plot: false
   output: "outApi.csv"
-  Location: "pkg/benchmarkapi"
+  Location: "./pkg/benchmarkapi"
   Samples: 2
