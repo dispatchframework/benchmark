@@ -1,8 +1,11 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"reflect"
+	"log"
+	"os"
+	"os/exec"
 	"time"
 
 	"github.com/dispatchframework/benchmark/pkg/reporter"
@@ -10,27 +13,48 @@ import (
 
 var (
 	aggregator *reporter.TimeRecord
+	testsRun   []string
+	Functions  []string
+	// Flags to control how the tests are run
+	samples    int
+	testFunc   string
+	shouldPlot bool
+	output     string
 )
 
-type TimeTests int
+type TimeTests struct {
+	functions []string
+	apis      []string
+}
 
-func (t TimeTests) BenchmarkTest1() {
-	aggregator.InitRecord("first")
-	fmt.Println("Measuring first test")
-	start := time.Now()
-	for i := 0; i < 5; i++ {
-		start = time.Now()
-		fmt.Println("Hello World")
-		aggregator.RecordTime("first", time.Since(start))
+func init() {
+	flag.StringVar(&output, "outFile",
+		fmt.Sprintf("out-%v.csv", time.Now().Unix()),
+		"What file to output the results to")
+	flag.IntVar(&samples, "samples", 1, "Number of samples to be collected")
+	flag.StringVar(&testFunc, "function",
+		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
+		"What function to use to test")
+	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
+}
+
+func (t TimeTests) Cleanup() {
+	fmt.Println("Cleaning up")
+	fmt.Printf("Functions: %v\n", Functions)
+	for _, name := range Functions {
+		cmd := exec.Command("dispatch", "delete", "function", name)
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Unable to delete function %v. %v\n", name, err)
+			log.Println("Can't delete function")
+		}
 	}
 }
 
 func main() {
-	aggregator = reporter.NewReporter("test runner")
-	v := reflect.ValueOf(TimeTests(0))
-	for k := 1; k < 2; k++ {
-		v.MethodByName(fmt.Sprintf("BenchmarkTest%v", k)).Call(nil)
-	}
-	fmt.Printf("Values: %v\n", aggregator.GetRecord("first"))
+	flag.Parse()
+	aggregator = reporter.NewReporter("test runner", output, shouldPlot)
+	var tests TimeTests
+	defer tests.Cleanup()
+	tests.TestFuncMake()
 	fmt.Println(aggregator.PrintResults())
 }

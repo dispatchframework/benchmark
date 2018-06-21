@@ -11,19 +11,23 @@ import (
 )
 
 type TimeRecord struct {
-	Suite   string
-	Records map[string][]time.Duration
-	Locks   map[string]*sync.RWMutex
-	mu      *sync.RWMutex
+	Suite      string
+	Records    map[string][]time.Duration
+	Locks      map[string]*sync.RWMutex
+	Output     string
+	shouldPlot bool
+	mu         *sync.RWMutex
 }
 
-func NewReporter(name string) *TimeRecord {
+func NewReporter(name string, output string, shouldPlot bool) *TimeRecord {
 	var records TimeRecord
 	var mu sync.RWMutex
 	records.Suite = name
 	records.Records = make(map[string][]time.Duration)
 	records.Locks = make(map[string]*sync.RWMutex)
 	records.mu = &mu
+	records.Output = output
+	records.shouldPlot = shouldPlot
 	return &records
 }
 
@@ -50,30 +54,35 @@ func (t *TimeRecord) GetRecord(name string) []time.Duration {
 	return t.Records[name]
 }
 
-func AverageRecords(times []time.Duration) float64 {
+func GetStats(times []time.Duration) (float64, float64) {
 	sum := 0.0
 	for _, val := range times {
 		sum += val.Seconds()
 	}
-	return sum / float64(len(times))
-}
+	mean := sum / float64(len(times))
 
-func StdDevRecords(times []time.Duration, mean float64) float64 {
-	sum := 0.0
+	distance := 0.0
 	for _, val := range times {
-		sum += math.Abs(mean - val.Seconds())
+		distance += math.Abs(mean - val.Seconds())
 	}
-	return math.Sqrt(math.Pow(sum, 2) / float64(len(times)))
+	deviation := math.Sqrt(math.Pow(distance, 2) / float64(len(times)))
+	return mean, deviation
 }
 
 func (t *TimeRecord) PrintResults() string {
 	var result []string
+	if len(t.Records) == 0 {
+		return "No tests were run"
+	}
+	t.OutToFile()
 	for name, durations := range t.Records {
 		sort.Slice(durations, func(i, j int) bool { return durations[i] > durations[j] })
-		mean := AverageRecords(durations)
-		sDev := StdDevRecords(durations, mean)
+		mean, sDev := GetStats(durations)
 		field := Sprintf("Test: %v. Slowest: %v, Fastest: %v. Average: %v seconds. Standard Deviation: %v seconds.", name, Red(durations[0]), Green(durations[len(durations)-1]), Cyan(mean), Magenta(Sprintf("%c %v", '\u00B1', sDev)))
 		result = append(result, field)
+	}
+	if t.shouldPlot {
+		t.SimplePlot()
 	}
 	return strings.Join(result, "\n")
 }
