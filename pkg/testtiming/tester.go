@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"reflect"
+	"regexp"
 	"time"
 
 	"github.com/dispatchframework/benchmark/pkg/reporter"
@@ -23,6 +25,7 @@ var (
 )
 
 type TimeTests struct {
+	name      string
 	functions []string
 	apis      []string
 }
@@ -38,10 +41,10 @@ func init() {
 	flag.BoolVar(&shouldPlot, "plot", false, "Should a plot be produced")
 }
 
-func (t TimeTests) Cleanup() {
+func (t *TimeTests) Cleanup() {
 	fmt.Println("Cleaning up")
-	fmt.Printf("Functions: %v\n", Functions)
-	for _, name := range Functions {
+	fmt.Printf("Functions to be cleaned: %v\n", t.functions)
+	for _, name := range t.functions {
 		cmd := exec.Command("dispatch", "delete", "function", name)
 		if err := cmd.Run(); err != nil {
 			fmt.Printf("Unable to delete function %v. %v\n", name, err)
@@ -52,9 +55,21 @@ func (t TimeTests) Cleanup() {
 
 func main() {
 	flag.Parse()
+	testsMatcher := os.Args[1]
+	rx := regexp.MustCompile(testsMatcher)
 	aggregator = reporter.NewReporter("test runner", output, shouldPlot)
-	var tests TimeTests
-	defer tests.Cleanup()
-	tests.TestFuncMake()
+	tests := &TimeTests{
+		name: "Testing",
+	}
+	for i := 0; i < reflect.ValueOf(tests).NumMethod(); i++ {
+		method := reflect.TypeOf(tests).Method(i)
+		name := method.Name
+		if rx.MatchString(name) {
+			reflect.ValueOf(tests).MethodByName(name).Call(nil)
+		}
+	}
+	tests.Cleanup()
+	// tests.TestFuncMake()
+	// tests.TestFuncMakeSerial()
 	fmt.Println(aggregator.PrintResults())
 }
