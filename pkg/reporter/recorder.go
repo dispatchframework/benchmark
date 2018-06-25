@@ -78,7 +78,7 @@ func (t *TimeRecord) PrintResults() string {
 	for name, durations := range t.Records {
 		sort.Slice(durations, func(i, j int) bool { return durations[i] > durations[j] })
 		mean, sDev := GetStats(durations)
-		field := Sprintf("Test: %v. Slowest: %v, Fastest: %v. Average: %v seconds. Standard Deviation: %v seconds.", name, Red(durations[0]), Green(durations[len(durations)-1]), Cyan(mean), Magenta(Sprintf("%c %v", '\u00B1', sDev)))
+		field := Sprintf("Test: %v. \n\tSlowest: %v, \n\tFastest: %v. \n\tAverage: %v seconds. \n\tStandard Deviation: %v seconds.", name, Red(durations[0]), Green(durations[len(durations)-1]), Cyan(mean), Magenta(Sprintf("%c %v", '\u00B1', sDev)))
 		result = append(result, field)
 	}
 	if t.shouldPlot {

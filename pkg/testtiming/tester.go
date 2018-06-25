@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/dispatchframework/benchmark/pkg/reporter"
+	. "github.com/logrusorgru/aurora"
 )
 
 var (
@@ -55,7 +56,8 @@ func (t *TimeTests) Cleanup() {
 
 func main() {
 	flag.Parse()
-	testsMatcher := os.Args[1]
+	args := flag.Args()
+	testsMatcher := args[0]
 	rx := regexp.MustCompile(testsMatcher)
 	aggregator = reporter.NewReporter("test runner", output, shouldPlot)
 	tests := &TimeTests{
@@ -65,11 +67,10 @@ func main() {
 		method := reflect.TypeOf(tests).Method(i)
 		name := method.Name
 		if rx.MatchString(name) {
+			fmt.Printf("\n\n[%v]\n\n", Green(name))
 			reflect.ValueOf(tests).MethodByName(name).Call(nil)
 		}
 	}
 	tests.Cleanup()
-	// tests.TestFuncMake()
-	// tests.TestFuncMakeSerial()
 	fmt.Println(aggregator.PrintResults())
 }
