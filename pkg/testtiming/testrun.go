@@ -9,15 +9,15 @@ import (
 
 func (t *TimeTests) TestRun(name string) {
 	start := time.Now()
-	util.ExecuteFunction(name, true)
+	util.ExecuteFunction(name)
 	duration := time.Since(start)
 	fmt.Printf("Single run: %v\n", duration.Seconds())
-	aggregator.RecordTime("Run Single Function", duration)
+	t.aggregator.RecordTime("Run Single Function", duration)
 }
 
 func (t *TimeTests) TestFuncRunSingle() {
 	fmt.Println("Testing Run function")
-	aggregator.InitRecord("Run Single Function")
+	t.aggregator.InitRecord("Run Single Function")
 	start := time.Now()
 	if len(t.functions) <= 0 {
 		util.CreateFunction("RunFuncTest", testFunc)
@@ -32,7 +32,7 @@ func (t *TimeTests) TestFuncRunSingle() {
 
 func (t *TimeTests) TestFuncRunSeries() {
 	fmt.Println("Testing multiple function running in series")
-	aggregator.InitRecord("Series Run Function")
+	t.aggregator.InitRecord("Series Run Function")
 	if len(t.functions) <= 0 {
 		util.CreateFunction("RunFuncTest", testFunc)
 		t.functions = append(t.functions, "RunFuncTest")
@@ -42,8 +42,32 @@ func (t *TimeTests) TestFuncRunSeries() {
 	for i := 0; i < samples; i++ {
 		start = time.Now()
 		for j := 0; j < 5; j++ {
-			util.ExecuteFunction(name, true)
+			util.ExecuteFunction(name)
 		}
-		aggregator.RecordTime("Series Run Function", time.Since(start))
+		t.aggregator.RecordTime("Series Run Function", time.Since(start))
+	}
+}
+
+func (t *TimeTests) TestFuncRunParallel() {
+	fmt.Println("Testing Multiple Function Creation in Parallel")
+	record := func(len time.Duration) {
+		t.aggregator.RecordTime("Parallel Run Function", len)
+	}
+	if len(t.functions) <= 0 {
+		util.CreateFunction("RunFuncTest", testFunc)
+		t.functions = append(t.functions, "RunFuncTest")
+	}
+
+	toRun := func(args ...string) {
+		if len(args) < 1 {
+			panic("Not enough args to create function")
+		}
+		name := args[0]
+		util.ExecuteFunction(name)
+	}
+	t.aggregator.InitRecord("Parallel Run Function")
+	for i := 0; i < samples; i++ {
+		args := []string{"RunFuncTest", testFunc}
+		util.SyncRunRunners(toRun, record, 2, false, args...)
 	}
 }

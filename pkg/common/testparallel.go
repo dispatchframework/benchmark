@@ -6,25 +6,30 @@ import (
 	"time"
 )
 
-func Runner(toRun func(string, string), name, location string, wg, start *sync.WaitGroup) {
+func Runner(toRun func(...string), wg, start *sync.WaitGroup, args ...string) {
+	// func Runner(toRun func(...string), arg1, arg2 string, wg, start *sync.WaitGroup) {
 	wg.Done()
 	start.Wait()
-	toRun(name, location)
+	toRun(args...)
 	wg.Done()
 }
 
-func SyncRunRunners(toRun func(string, string), location string, runners int, record func(time.Duration), iteration int) []string {
+func SyncRunRunners(toRun func(...string), record func(time.Duration), runners int, create bool, args ...string) {
+	// func SyncRunRunners(toRun func(...string), location string, runners int, record func(time.Duration), iteration int) []string {
 	var wg sync.WaitGroup
 	var startWg sync.WaitGroup
-	var funcs []string
 	start := time.Now()
 	startWg.Add(runners)
-	// Creation Step
+	// Creation Of Runners Step
 	for i := 0; i < runners; i++ {
 		wg.Add(1)
-		name := fmt.Sprintf("Parallel%v-%v", iteration, i)
-		funcs = append(funcs, name)
-		go Runner(toRun, name, location, &wg, &startWg)
+		newArgs := make([]string, len(args))
+		copy(newArgs, args)
+		if create {
+			name := args[0]
+			newArgs[0] = fmt.Sprintf("%v-%v", name, i)
+		}
+		go Runner(toRun, &wg, &startWg, newArgs...)
 	}
 	wg.Wait()
 	wg.Add(runners)
@@ -32,5 +37,4 @@ func SyncRunRunners(toRun func(string, string), location string, runners int, re
 	startWg.Add(-1 * runners)
 	wg.Wait()
 	record(time.Since(start))
-	return funcs
 }

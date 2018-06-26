@@ -3,13 +3,14 @@ package reporter
 import (
 	"bufio"
 	"os"
+	"time"
 
 	chart "github.com/wcharczuk/go-chart"
 )
 
-func (t *TimeRecord) SimplePlot() {
+func SimplePlot(Records map[string][]time.Duration, name string) {
 	var series []chart.Series
-	for field, durations := range t.Records {
+	for field, durations := range Records {
 		var x, y []float64
 		for i, time := range durations {
 			x = append(x, float64(i))
@@ -21,10 +22,10 @@ func (t *TimeRecord) SimplePlot() {
 			YValues: y,
 		})
 	}
-	t.PlotSeries(series)
+	PlotSeries(series, name)
 }
 
-func (t *TimeRecord) PlotSeries(series []chart.Series) {
+func PlotSeries(series []chart.Series, name string) {
 	graph := chart.Chart{
 		XAxis: chart.XAxis{
 			Style: chart.Style{Show: true},
@@ -39,7 +40,6 @@ func (t *TimeRecord) PlotSeries(series []chart.Series) {
 	}
 	var output *os.File
 	defer output.Close()
-	name := "chart.png"
 	if _, err := os.Stat(name); err == nil {
 		os.Remove(name)
 	}

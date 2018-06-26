@@ -107,16 +107,11 @@ func DeleteFunction(funcName string) error {
 	return err
 }
 
-func ExecuteFunction(funcName string, wait bool) error {
-	shouldWait := ""
-	if wait {
-		shouldWait = "--wait"
-	}
-	fmt.Printf("Starting to run function: %v\n", funcName)
-	cmd := exec.Command("dispatch", "exec", funcName, shouldWait)
-	output, err := cmd.Output()
+func ExecuteFunction(funcName string) error {
+	cmd := exec.Command("dispatch", "exec", funcName, "--wait")
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("Unable to run function: %v, %v\n", err, output)
+		log.Printf("Unable to run function: %v, \n%s\n", err, output)
 		return err
 	}
 	var result ExecInfo
@@ -124,6 +119,55 @@ func ExecuteFunction(funcName string, wait bool) error {
 		log.Printf("Unable to unmarshal the result\n")
 		return err
 	}
-	fmt.Println("Finished Running Function")
 	return nil
+}
+
+// func GetPodStatus(podName, ns string) string {
+// 	var podStats struct {
+// 		Status string
+// 	}
+// 	get := exec.Command("kubectl", "-n", ns, "describe", "pod", podName)
+// 	output, err := get.CombinedOutput()
+// 	if err != nil {
+// 		log.Fatalf("Error getting status: %v. \n%s", err, output)
+// 	}
+// 	fmt.Printf("output: %s\n", output)
+// 	json.Unmarshal(output, &podStats)
+// 	return podStats.Status
+// }
+
+func SetupApi(name, target, path string) {
+	fmt.Printf("Creating endpoint %v\n", name)
+	createEndpoint := exec.Command("dispatch", "create", "api", "--method", "POST", "--path", fmt.Sprintf("/%v", path), name, target)
+	output, err := createEndpoint.CombinedOutput()
+	if err != nil {
+		log.Fatalf("Unable to capture output. %v\n%v", err, output)
+	}
+	var status struct {
+		Status string
+	}
+	for status.Status != "READY" {
+		getStatus := exec.Command("dispatch", "get", "api", name, "--json")
+		output, err := getStatus.Output()
+		if err != nil {
+			log.Fatalf("Unable to get status of the endpoint: %v\n", err)
+		}
+		if err := json.Unmarshal(output, &status); err != nil {
+			log.Fatalf("Unable to decode the json status of endpoint, %v\n", err)
+		}
+	}
+	fmt.Printf("Created Endpoint: %v\n", name)
+}
+
+func QueryApi(url, payload string) []byte {
+	queryEndpoint := exec.Command(
+		"curl", "-k", url,
+		"-H", "Content-Type: application/json",
+		"-d", payload,
+	)
+	output, err := queryEndpoint.CombinedOutput()
+	if err != nil {
+		log.Fatalf("Failure when querying api endpoint. %v\n%v", err, output)
+	}
+	return output
 }

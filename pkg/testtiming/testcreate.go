@@ -12,12 +12,12 @@ func (t *TimeTests) MeasureSingleMake(name string) {
 	t.functions = append(t.functions, name)
 	start := time.Now()
 	util.CreateFunction(name, testFunc)
-	aggregator.RecordTime("Make Function", time.Since(start))
+	t.aggregator.RecordTime("Make Function", time.Since(start))
 }
 
 func (t *TimeTests) TestFuncMakeSingle() {
 	fmt.Println("Testing Make function")
-	aggregator.InitRecord("Make Function")
+	t.aggregator.InitRecord("Make Function")
 	start := time.Now()
 	for i := 0; i < samples; i++ {
 		t.MeasureSingleMake(fmt.Sprintf("testFunc%v", i))
@@ -27,7 +27,7 @@ func (t *TimeTests) TestFuncMakeSingle() {
 
 func (t *TimeTests) TestFuncMakeSerial() {
 	fmt.Println("Testing multiple function creation in series")
-	aggregator.InitRecord("Series Function")
+	t.aggregator.InitRecord("Series Function")
 	start := time.Now()
 	for i := 0; i < samples; i++ {
 		start = time.Now()
@@ -36,20 +36,27 @@ func (t *TimeTests) TestFuncMakeSerial() {
 			t.functions = append(t.functions, name)
 			util.CreateFunction(name, testFunc)
 		}
-		aggregator.RecordTime("Series Function", time.Since(start))
+		t.aggregator.RecordTime("Series Function", time.Since(start))
 	}
 }
 
 func (t *TimeTests) TestFuncMakeParallel() {
-	fmt.Println("Testing multiple function creation in parallel")
-	var funcs []string
-	rcrd := func(len time.Duration) {
-		aggregator.RecordTime("Parallel Function", len)
+	fmt.Println("Testing Multiple Function Creation in Parallel")
+	record := func(len time.Duration) {
+		t.aggregator.RecordTime("Parallel Function", len)
 	}
-	aggregator.InitRecord("Parallel Function")
-	fmt.Printf("Samples: %v\n", samples)
+	toRun := func(args ...string) {
+		if len(args) < 2 {
+			panic("Not enough args to create function")
+		}
+		name := args[0]
+		location := args[1]
+		t.functions = append(t.functions, name)
+		util.CreateFunction(name, location)
+	}
+	t.aggregator.InitRecord("Parallel Function")
 	for i := 0; i < samples; i++ {
-		funcs = util.SyncRunRunners(util.CreateFunction, testFunc, 2, rcrd, i)
-		t.functions = append(t.functions, funcs...)
+		args := []string{fmt.Sprintf("parallel%v", i), testFunc}
+		util.SyncRunRunners(toRun, record, 2, true, args...)
 	}
 }
