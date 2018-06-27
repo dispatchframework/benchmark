@@ -84,8 +84,15 @@ func main() {
 	} else {
 		testsMatcher = ".+"
 	}
+	graphs := map[string]func(map[string][]float64, string){
+		"Creation":  reporter.SeriesPlot,
+		"Execution": reporter.SeriesPlot,
+		"Scale":     reporter.SeriesPlot,
+		"Api":       reporter.BarPlot,
+	}
 	rx := regexp.MustCompile(testsMatcher)
 	testRecorder := reporter.NewReporter("TestTime", output)
+	testRecorder.Graphs = graphs
 	tests := &Tester{
 		name:       "TimeTester",
 		aggregator: testRecorder,
@@ -98,6 +105,7 @@ func main() {
 			tests.Cleanup()
 		}
 	}()
+	fmt.Printf("Graphs: %v\n", testRecorder.Graphs)
 	callMethods(tests, rx)
 	fmt.Println(tests.aggregator.PrintResults())
 }

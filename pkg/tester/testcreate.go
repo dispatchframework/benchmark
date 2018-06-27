@@ -18,6 +18,7 @@ func (t *Tester) MeasureSingleMake(name string) {
 func (t *Tester) TestFuncMakeSingle() {
 	fmt.Println("Testing Make function")
 	t.aggregator.InitRecord("Make Function")
+	t.aggregator.AssignGraph("Creation", "Make Function")
 	start := time.Now()
 	for i := 0; i < samples; i++ {
 		t.MeasureSingleMake(fmt.Sprintf("testFunc%v", i))
@@ -28,6 +29,7 @@ func (t *Tester) TestFuncMakeSingle() {
 func (t *Tester) TestFuncMakeSerial() {
 	fmt.Println("Testing multiple function creation in series")
 	t.aggregator.InitRecord("Series Function")
+	t.aggregator.AssignGraph("Creation", "Series Function")
 	start := time.Now()
 	for i := 0; i < samples; i++ {
 		start = time.Now()
@@ -55,6 +57,7 @@ func (t *Tester) TestFuncMakeParallel() {
 		util.CreateFunction(name, location)
 	}
 	t.aggregator.InitRecord("Parallel Function")
+	t.aggregator.AssignGraph("Creation", "Parallel Function")
 	for i := 0; i < samples; i++ {
 		args := []string{fmt.Sprintf("parallel%v", i), testFunc}
 		util.SyncRunRunners(toRun, record, 2, true, args...)

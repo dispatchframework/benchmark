@@ -11,21 +11,25 @@ import (
 )
 
 type BenchmarkRecorder struct {
-	Suite   string
-	Records map[string][]float64
-	Locks   map[string]*sync.RWMutex
-	Output  string
-	mu      *sync.RWMutex
+	Suite        string
+	Output       string
+	mu           *sync.RWMutex
+	Records      map[string][]float64
+	Locks        map[string]*sync.RWMutex
+	ChartCollect map[string][]string
+	Graphs       map[string]func(map[string][]float64, string)
 }
 
 func NewReporter(name string, output string) *BenchmarkRecorder {
 	var records BenchmarkRecorder
 	var mu sync.RWMutex
 	records.Suite = name
-	records.Records = make(map[string][]float64)
-	records.Locks = make(map[string]*sync.RWMutex)
 	records.mu = &mu
 	records.Output = output
+	records.Records = make(map[string][]float64)
+	records.Locks = make(map[string]*sync.RWMutex)
+	records.ChartCollect = make(map[string][]string)
+	records.Graphs = make(map[string]func(map[string][]float64, string))
 	return &records
 }
 
@@ -43,6 +47,16 @@ func (t *BenchmarkRecorder) RecordValue(name string, length float64) {
 	records := t.Records[name]
 	records = append(records, length)
 	t.Records[name] = records
+}
+
+func (t *BenchmarkRecorder) AssignGraph(chart string, record string) {
+	val, present := t.ChartCollect[chart]
+	if present {
+		val = append(val, record)
+	} else {
+		val = []string{record}
+	}
+	t.ChartCollect[chart] = val
 }
 
 func (t *BenchmarkRecorder) GetRecord(name string) []float64 {
@@ -82,6 +96,15 @@ func (t *BenchmarkRecorder) PrintResults() string {
 		result = append(result, field)
 	}
 	result = append(result, "Individual Measurements")
-
+	for chart, records := range t.ChartCollect {
+		fmt.Printf("Charts: %v, %v\n", chart, records)
+		grapher := t.Graphs[chart]
+		recordMap := make(map[string][]float64)
+		for _, record := range records {
+			recordMap[record] = t.Records[record]
+		}
+		fmt.Println(recordMap)
+		grapher(recordMap, chart)
+	}
 	return strings.Join(result, "\n")
 }

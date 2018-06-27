@@ -18,6 +18,7 @@ func (t *Tester) TestRun(name string) {
 func (t *Tester) TestFuncRunSingle() {
 	fmt.Println("Testing Run function")
 	t.aggregator.InitRecord("Run Single Function")
+	t.aggregator.AssignGraph("Execution", "Run Single Function")
 	start := time.Now()
 	if len(t.functions) <= 0 {
 		util.CreateFunction("RunFuncTest", testFunc)
@@ -33,6 +34,7 @@ func (t *Tester) TestFuncRunSingle() {
 func (t *Tester) TestFuncRunSeries() {
 	fmt.Println("Testing multiple function running in series")
 	t.aggregator.InitRecord("Series Run Function")
+	t.aggregator.AssignGraph("Execution", "Series Run Function")
 	if len(t.functions) <= 0 {
 		util.CreateFunction("RunFuncTest", testFunc)
 		t.functions = append(t.functions, "RunFuncTest")
@@ -66,6 +68,7 @@ func (t *Tester) TestFuncRunParallel() {
 		util.ExecuteFunction(name)
 	}
 	t.aggregator.InitRecord("Parallel Run Function")
+	t.aggregator.AssignGraph("Execution", "Parallel Run Function")
 	for i := 0; i < samples; i++ {
 		args := []string{"RunFuncTest", testFunc}
 		util.SyncRunRunners(toRun, record, 2, false, args...)

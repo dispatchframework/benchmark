@@ -22,6 +22,7 @@ func (s *Tester) TestScaleTimes() {
 	for j := 256; j <= limit; j *= 2 {
 		measurement := fmt.Sprintf("Scale Test %v runners", j)
 		s.aggregator.InitRecord(measurement)
+		s.aggregator.AssignGraph("Scale", measurement)
 		record := func(len float64) {
 			s.aggregator.RecordValue(measurement, len)
 		}

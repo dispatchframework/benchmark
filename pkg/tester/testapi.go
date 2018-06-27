@@ -104,6 +104,7 @@ func (t *Tester) ApiMeasureThroughput() {
 		runners := j
 		test := fmt.Sprintf("Functions in 1 Second with %v Runners", runners)
 		t.aggregator.InitRecord(test)
+		t.aggregator.AssignGraph("Api", test)
 		stop = 0
 		counter = 0
 		for i := 0; i < samples; i++ {
