@@ -31,6 +31,6 @@ run:
     
     make install
  
-    mv $GOPATH/bin/benchmarkrunner $GOPATH/benchmark-runner
+    mv $GOPATH/bin/tester $GOPATH/benchmark-runner
 
     echo Finished!

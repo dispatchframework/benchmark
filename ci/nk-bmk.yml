@@ -22,3 +22,5 @@ jobs:
     file: resource-tutorial/tutorials/basic/task-hello-world/task_hello_world.yml
   - task: build-benchmark
     file: benchmark/ci/make-benchmark.yml
+  - task: run-benchmark
+    file: benchmark/ci/run-benchmark.yml
