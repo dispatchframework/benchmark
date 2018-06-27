@@ -93,4 +93,4 @@ run:
 
     ls $GOPATH
 
-    tester -samples=3 -function=./resources/functions/test.py TestFuncMakeSingle
+    tester -samples=3 -function=./resources/functions/test.py
