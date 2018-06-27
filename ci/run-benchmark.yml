@@ -11,11 +11,11 @@ image_resource:
 #   GKE_KEY:
 #   GKE_PROJECT_ID:
 
-# inputs:
-# - name: benchmark
-# - name: benchmark-runner
-# - name: dispatch-cli
-# - name: dispatch
+inputs:
+- name: benchmark
+- name: benchmark-runner
+- name: dispatch-cli
+- name: dispatch
 # - name: cluster
 # - name: ci-keys
 
