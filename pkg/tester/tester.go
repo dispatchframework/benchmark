@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"reflect"
 	"regexp"
 	"time"
@@ -118,6 +119,15 @@ func main() {
 		name:       "ScaleTester",
 		aggregator: scaleRecorder,
 	}
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for sig := range c {
+			fmt.Printf("Signal Received: %v\n", sig)
+			timer.Cleanup()
+			scales.Cleanup()
+		}
+	}()
 	callMethods(timer, rx)
 	callMethods(scales, rx)
 	fmt.Println(timer.aggregator.PrintResults())

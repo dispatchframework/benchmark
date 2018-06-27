@@ -6,19 +6,17 @@ Makefile *should* allow for easy setup
 ```
 make install
 ```
-should install the script that runs all the tests based on a configuration file, after running this you should be able to run
+should install the test binary
 ```
-benchmarkrunner ./config.yaml
+tester
 ```
-adjusted based on where your configuration file is
+is the command to run tests. By default all tests will be run. However, the tester accepts regular expression arguments that allow you to select specific tests.
+Command line flags are also available.
+```
+-sample
+```
+allows you to configure the number of samples of each test. Probably the only really important flag. Set to 1 by default
 ## Configuring the tests
-Currently configuration options are limited. There are two tests, timing and scalability. The configuration file allows you to specify which ones to run, where they output to (this doesn't work yet lol), and the location of the binaries of the tests. To run everything assuming standard go configuration, the following should work.
-```yaml
-Scale:
-  enabled: true
-  Location: "./pkg/benchmarkscale"
-Timing:
-  enabled: true
-  Location: "./pkg/benchmarktiming"
+No more configuration. Tests are controlled by the command line.
 
-```
+Please let me know if there are any essential config options you think we need.

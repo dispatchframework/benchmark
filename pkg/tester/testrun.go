@@ -49,7 +49,7 @@ func (t *TimeTests) TestFuncRunSeries() {
 }
 
 func (t *TimeTests) TestFuncRunParallel() {
-	fmt.Println("Testing Multiple Function Creation in Parallel")
+	fmt.Println("Testing Multiple Function Execution in Parallel")
 	record := func(len time.Duration) {
 		t.aggregator.RecordTime("Parallel Run Function", len)
 	}
@@ -60,7 +60,7 @@ func (t *TimeTests) TestFuncRunParallel() {
 
 	toRun := func(args ...string) {
 		if len(args) < 1 {
-			panic("Not enough args to create function")
+			panic("Not enough args to run function")
 		}
 		name := args[0]
 		util.ExecuteFunction(name)
