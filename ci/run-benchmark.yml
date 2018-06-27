@@ -7,17 +7,17 @@ image_resource:
     repository: vmware/dispatch-k8s-ci
     tag: v0.0.12
 
-params:
-  GKE_KEY:
-  GKE_PROJECT_ID:
+# params:
+#   GKE_KEY:
+#   GKE_PROJECT_ID:
 
-inputs:
-- name: benchmark
-- name: benchmark-runner
-- name: dispatch-cli
-- name: dispatch
-- name: cluster
-- name: ci-keys
+# inputs:
+# - name: benchmark
+# - name: benchmark-runner
+# - name: dispatch-cli
+# - name: dispatch
+# - name: cluster
+# - name: ci-keys
 
 
 run:
