@@ -1,25 +1,29 @@
 ---
 resources:
-- name: resource-tutorial
-  type: git
-  source:
-    uri: https://github.com/starkandwayne/concourse-tutorial.git
-    branch: develop
 - name: benchmark-master
   type: git
   source:
     uri: https://github.com/dispatchframework/benchmark.git
     branch: nkaashoek-updateci
+- name: dispatch-master
+  type: git
+  source:
+    uri: https://github.com/vmware/dispatch.git
+    branch: master
+
+
     
 jobs:
 - name: benchmarker
   public: true
   plan:
-  - get: benchmark
-    resource: benchmark-master
-  - get: resource-tutorial
-  - task: hello-world
-    file: resource-tutorial/tutorials/basic/task-hello-world/task_hello_world.yml
+  - aggregate:
+    - get: benchmark
+      resource: benchmark-master
+    - get: dispatch
+      resource: dispatch-master
+  - task: build-cli
+    file: dispatch/ci/e2e/build-cli.yml
   - task: build-benchmark
     file: benchmark/ci/make-benchmark.yml
   - task: run-benchmark
