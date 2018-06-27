@@ -1,0 +1,32 @@
+---
+resource_types:
+resources:
+- name: dispatch-master
+  type: git
+  source:
+    uri: https://github.com/vmware/dispatch.git
+    branch: master
+
+- name: benchmark-master
+  type: git
+  source:
+    uri: https://github.com/dispatchframework/benchmark
+    branch: nkaashoek-updateci
+
+# Workaround for https://github.com/concourse/concourse/issues/736
+jobs:
+- name: benchmarker
+  public: true
+  plan:
+  - aggregate:
+    - get: dispatch
+      resource: dispatch-master
+    - get: benchmark
+      resource: benchmark-master
+  - task: build-cli
+    file: dispatch/ci/e2e/build-cli.yml
+  - task: build-benchmark
+    file: benchmark/ci/make-benchmark.yml
+  # - task: run-benchmark
+  #   file: benchmark/ci/run-benchmark.yml
+
