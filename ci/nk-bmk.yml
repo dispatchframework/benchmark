@@ -1,32 +1,24 @@
 ---
-resource_types:
 resources:
-- name: dispatch-master
+- name: resource-tutorial
   type: git
   source:
-    uri: https://github.com/vmware/dispatch.git
-    branch: master
-
+    uri: https://github.com/starkandwayne/concourse-tutorial.git
+    branch: develop
 - name: benchmark-master
   type: git
   source:
-    uri: https://github.com/dispatchframework/benchmark
+    uri: https://github.com/dispatchframework/benchmark.git
     branch: nkaashoek-updateci
-
-# Workaround for https://github.com/concourse/concourse/issues/736
+    
 jobs:
 - name: benchmarker
   public: true
   plan:
-  - aggregate:
-    - get: dispatch
-      resource: dispatch-master
-    - get: benchmark
-      resource: benchmark-master
-  - task: build-cli
-    file: dispatch/ci/e2e/build-cli.yml
+  - get: benchmark
+    resource: benchmark-master
+  - get: resource-tutorial
+  - task: hello-world
+    file: resource-tutorial/tutorials/basic/task-hello-world/task_hello_world.yml
   - task: build-benchmark
     file: benchmark/ci/make-benchmark.yml
-  # - task: run-benchmark
-  #   file: benchmark/ci/run-benchmark.yml
-
