@@ -72,7 +72,6 @@ func callMethods(t *Tester, rx *regexp.Regexp) {
 			reflect.ValueOf(t).MethodByName(name).Call(nil)
 		}
 	}
-	t.Cleanup()
 }
 
 func main() {
@@ -82,7 +81,7 @@ func main() {
 	if len(args) > 0 {
 		testsMatcher = args[0]
 	} else {
-		testsMatcher = ".+"
+		testsMatcher = "Test"
 	}
 	graphs := map[string]func(map[string][]float64, string){
 		"Creation":  reporter.SeriesPlot,
@@ -97,6 +96,7 @@ func main() {
 		name:       "TimeTester",
 		aggregator: testRecorder,
 	}
+	defer tests.Cleanup()
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -105,7 +105,6 @@ func main() {
 			tests.Cleanup()
 		}
 	}()
-	fmt.Printf("Graphs: %v\n", testRecorder.Graphs)
 	callMethods(tests, rx)
 	fmt.Println(tests.aggregator.PrintResults())
 }

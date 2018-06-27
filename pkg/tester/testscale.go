@@ -10,16 +10,15 @@ import (
 func (s *Tester) TestScaleTimes() {
 	limit := 32
 	fmt.Println("Comparing Performance as More functions are fun in parallel")
+	function := "LimitTester"
 	toRun := func(args ...string) {
-		util.ExecuteFunction("LimitTester")
+		util.ExecuteFunction(function)
 	}
-	if len(s.functions) <= 0 {
-		path, _ := path.Split(testFunc)
-		function := fmt.Sprintf("%vtest.py", path)
-		util.CreateFunction("LimitTester", function)
-		s.functions = append(s.functions, "LimitTester")
-		util.ExecuteFunction("LimitTester")
-	}
+	path, _ := path.Split(testFunc)
+	funcPath := fmt.Sprintf("%vtest.py", path)
+	util.CreateFunction(function, funcPath)
+	s.functions = append(s.functions, function)
+	util.ExecuteFunction(function)
 	for j := 2; j <= limit; j *= 2 {
 		measurement := fmt.Sprintf("Scale Test %v runners", j)
 		s.aggregator.InitRecord(measurement)

@@ -44,6 +44,7 @@ func (t *Tester) TestFuncMakeSerial() {
 
 func (t *Tester) TestFuncMakeParallel() {
 	fmt.Println("Testing Multiple Function Creation in Parallel")
+	runners := 2
 	record := func(len float64) {
 		t.aggregator.RecordValue("Parallel Function", len)
 	}
@@ -53,13 +54,18 @@ func (t *Tester) TestFuncMakeParallel() {
 		}
 		name := args[0]
 		location := args[1]
-		t.functions = append(t.functions, name)
 		util.CreateFunction(name, location)
 	}
 	t.aggregator.InitRecord("Parallel Function")
 	t.aggregator.AssignGraph("Creation", "Parallel Function")
+	// Doing this here to avoid race condition
+	for i := 0; i < samples; i++ {
+		for j := 0; j < samples; j++ {
+			t.functions = append(t.functions, fmt.Sprintf("parallel%v-%v", i, j))
+		}
+	}
 	for i := 0; i < samples; i++ {
 		args := []string{fmt.Sprintf("parallel%v", i), testFunc}
-		util.SyncRunRunners(toRun, record, 2, true, args...)
+		util.SyncRunRunners(toRun, record, runners, true, args...)
 	}
 }

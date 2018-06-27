@@ -39,23 +39,17 @@ func init() {
 }
 
 func (t *Tester) ApiBaseline() string {
-	var api string
-	if len(t.functions) <= 0 {
+	api := "testApi"
+	if !t.CheckFuncExists("TargetFunc") {
 		util.CreateFunction("TargetFunc", testFunc)
 		t.functions = append(t.functions, "TargetFunc")
-	}
-
-	if len(t.apis) > 0 {
-		api = t.apis[0]
-	} else {
-		api = "testApi"
 		t.apis = append(t.apis, api)
 		util.SetupApi(api, "TargetFunc", api)
 	}
 	return api
 }
 
-func (t *Tester) CompareApiExec() {
+func (t *Tester) TestApiVsExec() {
 	api := t.ApiBaseline()
 	t.aggregator.InitRecord("CompareApiExec")
 	t.aggregator.InitRecord("Api Times")
@@ -78,7 +72,7 @@ func (t *Tester) CompareApiExec() {
 	fmt.Printf("Total time: %v", time.Since(start).Seconds())
 }
 
-func (t *Tester) ApiMeasureThroughput() {
+func (t *Tester) TestApiThroughput() {
 	var wg sync.WaitGroup
 	maxRunners := 6
 	api := t.ApiBaseline()
