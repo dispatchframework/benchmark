@@ -14,4 +14,4 @@
 # Output of ginkgo
 output*
 *.csv
-chart-*
+chart*

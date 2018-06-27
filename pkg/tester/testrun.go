@@ -7,15 +7,15 @@ import (
 	util "github.com/dispatchframework/benchmark/pkg/common"
 )
 
-func (t *TimeTests) TestRun(name string) {
+func (t *Tester) TestRun(name string) {
 	start := time.Now()
 	util.ExecuteFunction(name)
 	duration := time.Since(start)
 	fmt.Printf("Single run: %v\n", duration.Seconds())
-	t.aggregator.RecordTime("Run Single Function", duration)
+	t.aggregator.RecordValue("Run Single Function", duration.Seconds())
 }
 
-func (t *TimeTests) TestFuncRunSingle() {
+func (t *Tester) TestFuncRunSingle() {
 	fmt.Println("Testing Run function")
 	t.aggregator.InitRecord("Run Single Function")
 	start := time.Now()
@@ -30,7 +30,7 @@ func (t *TimeTests) TestFuncRunSingle() {
 	fmt.Printf("Total time: %v\n", time.Since(start))
 }
 
-func (t *TimeTests) TestFuncRunSeries() {
+func (t *Tester) TestFuncRunSeries() {
 	fmt.Println("Testing multiple function running in series")
 	t.aggregator.InitRecord("Series Run Function")
 	if len(t.functions) <= 0 {
@@ -44,14 +44,14 @@ func (t *TimeTests) TestFuncRunSeries() {
 		for j := 0; j < 5; j++ {
 			util.ExecuteFunction(name)
 		}
-		t.aggregator.RecordTime("Series Run Function", time.Since(start))
+		t.aggregator.RecordValue("Series Run Function", time.Since(start).Seconds())
 	}
 }
 
-func (t *TimeTests) TestFuncRunParallel() {
+func (t *Tester) TestFuncRunParallel() {
 	fmt.Println("Testing Multiple Function Execution in Parallel")
-	record := func(len time.Duration) {
-		t.aggregator.RecordTime("Parallel Run Function", len)
+	record := func(len float64) {
+		t.aggregator.RecordValue("Parallel Run Function", len)
 	}
 	if len(t.functions) <= 0 {
 		util.CreateFunction("RunFuncTest", testFunc)

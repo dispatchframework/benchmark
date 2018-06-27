@@ -3,12 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	util "github.com/dispatchframework/benchmark/pkg/common"
 )
 
-func (s *ScaleTests) TestScaleTimes() {
+func (s *Tester) TestScaleTimes() {
 	limit := 256
 	fmt.Println("Comparing Performance as More functions are fun in parallel")
 	toRun := func(args ...string) {
@@ -23,8 +22,8 @@ func (s *ScaleTests) TestScaleTimes() {
 	for j := 256; j <= limit; j *= 2 {
 		measurement := fmt.Sprintf("Scale Test %v runners", j)
 		s.aggregator.InitRecord(measurement)
-		record := func(len time.Duration) {
-			s.aggregator.RecordTime(measurement, len)
+		record := func(len float64) {
+			s.aggregator.RecordValue(measurement, len)
 		}
 		for i := 0; i < samples; i++ {
 			args := []string{}

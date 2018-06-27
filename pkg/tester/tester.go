@@ -19,28 +19,17 @@ var (
 	testsRun  []string
 	Functions []string
 	// Flags to control how the tests are run
-	samples    int
-	testFunc   string
-	shouldPlot bool
-	output     string
-	apiIP      string
+	samples  int
+	testFunc string
+	output   string
+	apiIP    string
 )
 
-type Tester interface {
-	Cleanup()
-}
-
-type TimeTests struct {
+type Tester struct {
 	name       string
 	functions  []string
 	apis       []string
-	aggregator *reporter.TimeRecord
-}
-
-type ScaleTests struct {
-	name       string
-	functions  []string
-	aggregator *reporter.TimeRecord
+	aggregator *reporter.BenchmarkRecorder
 }
 
 func init() {
@@ -51,10 +40,9 @@ func init() {
 	flag.StringVar(&testFunc, "function",
 		fmt.Sprintf("%v/src/github.com/dispatchframework/benchmark/resources/functions/test.py", os.Getenv("GOPATH")),
 		"What function to use to test")
-	flag.BoolVar(&shouldPlot, "plot", true, "Should a plot be produced")
 }
 
-func (t *TimeTests) Cleanup() {
+func (t *Tester) Cleanup() {
 	fmt.Println("Cleaning up")
 	fmt.Printf("Functions to be cleaned: %v\n", t.functions)
 	for _, name := range t.functions {
@@ -75,19 +63,7 @@ func (t *TimeTests) Cleanup() {
 
 }
 
-func (t *ScaleTests) Cleanup() {
-	fmt.Println("Cleaning up")
-	fmt.Printf("Functions to be cleaned: %v\n", t.functions)
-	for _, name := range t.functions {
-		cmd := exec.Command("dispatch", "delete", "function", name)
-		if err := cmd.Run(); err != nil {
-			fmt.Printf("Unable to delete function %v. %v\n", name, err)
-			log.Println("Can't delete function")
-		}
-	}
-}
-
-func callMethods(t Tester, rx *regexp.Regexp) {
+func callMethods(t *Tester, rx *regexp.Regexp) {
 	for i := 0; i < reflect.ValueOf(t).NumMethod(); i++ {
 		method := reflect.TypeOf(t).Method(i)
 		name := method.Name
@@ -109,27 +85,19 @@ func main() {
 		testsMatcher = ".+"
 	}
 	rx := regexp.MustCompile(testsMatcher)
-	timeRecorder := reporter.NewReporter("TestTime", output, shouldPlot, reporter.SimplePlot)
-	scaleRecorder := reporter.NewReporter("TestScale", output, shouldPlot, reporter.SimplePlot)
-	timer := &TimeTests{
+	testRecorder := reporter.NewReporter("TestTime", output)
+	tests := &Tester{
 		name:       "TimeTester",
-		aggregator: timeRecorder,
-	}
-	scales := &ScaleTests{
-		name:       "ScaleTester",
-		aggregator: scaleRecorder,
+		aggregator: testRecorder,
 	}
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for sig := range c {
 			fmt.Printf("Signal Received: %v\n", sig)
-			timer.Cleanup()
-			scales.Cleanup()
+			tests.Cleanup()
 		}
 	}()
-	callMethods(timer, rx)
-	callMethods(scales, rx)
-	fmt.Println(timer.aggregator.PrintResults())
-	fmt.Println(scales.aggregator.PrintResults())
+	callMethods(tests, rx)
+	fmt.Println(tests.aggregator.PrintResults())
 }

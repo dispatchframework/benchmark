@@ -38,7 +38,7 @@ func init() {
 	fmt.Printf("Got the IP: %v\n", apiIP)
 }
 
-func (t *TimeTests) ApiBaseline() string {
+func (t *Tester) ApiBaseline() string {
 	var api string
 	if len(t.functions) <= 0 {
 		util.CreateFunction("TargetFunc", testFunc)
@@ -55,7 +55,7 @@ func (t *TimeTests) ApiBaseline() string {
 	return api
 }
 
-func (t *TimeTests) CompareApiExec() {
+func (t *Tester) CompareApiExec() {
 	api := t.ApiBaseline()
 	t.aggregator.InitRecord("CompareApiExec")
 	t.aggregator.InitRecord("Api Times")
@@ -67,22 +67,22 @@ func (t *TimeTests) CompareApiExec() {
 		startApi := time.Now()
 		_ = util.QueryApi(url, `{}`)
 		apiDuration := time.Since(startApi)
-		t.aggregator.RecordTime("Api Times", apiDuration)
+		t.aggregator.RecordValue("Api Times", apiDuration.Seconds())
 		startExec := time.Now()
 		_ = util.ExecuteFunction("TargetFunc")
 		funcDuration := time.Since(startExec)
-		t.aggregator.RecordTime("Function Times", funcDuration)
-		t.aggregator.RecordTime("CompareApiExec",
-			apiDuration-funcDuration)
+		t.aggregator.RecordValue("Function Times", funcDuration.Seconds())
+		t.aggregator.RecordValue("CompareApiExec",
+			apiDuration.Seconds()-funcDuration.Seconds())
 	}
 	fmt.Printf("Total time: %v", time.Since(start).Seconds())
 }
 
-func (t *TimeTests) ApiMeasureThroughput() {
+func (t *Tester) ApiMeasureThroughput() {
 	var wg sync.WaitGroup
 	maxRunners := 6
 	api := t.ApiBaseline()
-	record := func(len time.Duration) {
+	record := func(value float64) {
 		return
 	}
 	counter := 0
@@ -115,7 +115,7 @@ func (t *TimeTests) ApiMeasureThroughput() {
 			case <-time.After(1 * time.Second):
 				atomic.StoreInt64(&stop, 1)
 				len, _ := time.ParseDuration(fmt.Sprintf("%vs", counter))
-				t.aggregator.RecordTime(test, len)
+				t.aggregator.RecordValue(test, len.Seconds())
 			}
 		}
 	}

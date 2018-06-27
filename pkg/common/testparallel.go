@@ -14,7 +14,7 @@ func Runner(toRun func(...string), wg, start *sync.WaitGroup, args ...string) {
 	wg.Done()
 }
 
-func SyncRunRunners(toRun func(...string), record func(time.Duration), runners int, create bool, args ...string) {
+func SyncRunRunners(toRun func(...string), record func(float64), runners int, create bool, args ...string) {
 	// func SyncRunRunners(toRun func(...string), location string, runners int, record func(time.Duration), iteration int) []string {
 	var wg sync.WaitGroup
 	var startWg sync.WaitGroup
@@ -36,5 +36,5 @@ func SyncRunRunners(toRun func(...string), record func(time.Duration), runners i
 	start = time.Now()
 	startWg.Add(-1 * runners)
 	wg.Wait()
-	record(time.Since(start))
+	record(time.Since(start).Seconds())
 }

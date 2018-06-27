@@ -6,47 +6,37 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"time"
 
 	. "github.com/logrusorgru/aurora"
 )
 
-type TimeRecord struct {
-	Suite        string
-	Records      map[string][]time.Duration
-	Locks        map[string]*sync.RWMutex
-	Measurements map[string]string
-	Output       string
-	shouldPlot   bool
-	mu           *sync.RWMutex
-	chart        func(map[string][]time.Duration, string)
+type BenchmarkRecorder struct {
+	Suite   string
+	Records map[string][]float64
+	Locks   map[string]*sync.RWMutex
+	Output  string
+	mu      *sync.RWMutex
 }
 
-func NewReporter(name string, output string, shouldPlot bool, charter func(map[string][]time.Duration, string)) *TimeRecord {
-	var records TimeRecord
+func NewReporter(name string, output string) *BenchmarkRecorder {
+	var records BenchmarkRecorder
 	var mu sync.RWMutex
 	records.Suite = name
-	records.Records = make(map[string][]time.Duration)
+	records.Records = make(map[string][]float64)
 	records.Locks = make(map[string]*sync.RWMutex)
 	records.mu = &mu
 	records.Output = output
-	records.shouldPlot = shouldPlot
-	records.chart = charter
 	return &records
 }
 
-func (t *TimeRecord) MakeMeasurement(name, value string) {
-	t.Measurements[name] = value
-}
-
-func (t *TimeRecord) InitRecord(name string) {
+func (t *BenchmarkRecorder) InitRecord(name string) {
 	var lck sync.RWMutex
-	var records []time.Duration
+	var records []float64
 	t.Records[name] = records
 	t.Locks[name] = &lck
 }
 
-func (t *TimeRecord) RecordTime(name string, length time.Duration) {
+func (t *BenchmarkRecorder) RecordValue(name string, length float64) {
 	lck := t.Locks[name]
 	lck.Lock()
 	defer lck.Unlock()
@@ -55,50 +45,43 @@ func (t *TimeRecord) RecordTime(name string, length time.Duration) {
 	t.Records[name] = records
 }
 
-func (t *TimeRecord) GetRecord(name string) []time.Duration {
+func (t *BenchmarkRecorder) GetRecord(name string) []float64 {
 	lck := t.Locks[name]
 	lck.Lock()
 	defer lck.Unlock()
 	return t.Records[name]
 }
 
-func GetStats(times []time.Duration) (float64, float64) {
+func GetStats(records []float64) (float64, float64) {
 	sum := 0.0
-	for _, val := range times {
-		sum += val.Seconds()
+	for _, val := range records {
+		sum += val
 	}
-	mean := sum / float64(len(times))
+	mean := sum / float64(len(records))
 
 	distance := 0.0
-	for _, val := range times {
-		distance += math.Abs(mean - val.Seconds())
+	for _, val := range records {
+		distance += math.Abs(mean - val)
 	}
-	deviation := math.Sqrt(math.Pow(distance, 2) / float64(len(times)))
+	deviation := math.Sqrt(math.Pow(distance, 2) / float64(len(records)))
 	return mean, deviation
 }
 
-func (t *TimeRecord) PrintResults() string {
+func (t *BenchmarkRecorder) PrintResults() string {
 	var result []string
 	if len(t.Records) == 0 {
 		return fmt.Sprintf(Sprintf("[%v]\n%v", t.Suite, Red("No Tests Run")))
 	}
 	t.OutToFile()
-	for name, durations := range t.Records {
-		sort.Slice(durations, func(i, j int) bool { return durations[i] > durations[j] })
-		mean, sDev := GetStats(durations)
-		field := Sprintf("Test: %v. %v Samples. \n\tSlowest: %v, \n\tFastest: %v. \n\tAverage: %v seconds. \n\tStandard Deviation: %v seconds.", name, len(durations), Red(durations[0]), Green(durations[len(durations)-1]), Cyan(mean), Magenta(Sprintf("%c %v", '\u00B1', sDev)))
+	for name, samples := range t.Records {
+		sort.Slice(samples, func(i, j int) bool { return samples[i] > samples[j] })
+		mean, sDev := GetStats(samples)
+		field := Sprintf("Test: %v. %v Samples. \n\tSlowest: %v, \n\tFastest: %v. \n\tAverage: %v. \n\tStandard Deviation: %v",
+			name, len(samples), Red(samples[0]), Green(samples[len(samples)-1]), Cyan(mean),
+			Magenta(Sprintf("%c %v", '\u00B1', sDev)))
 		result = append(result, field)
 	}
 	result = append(result, "Individual Measurements")
 
-	for field, value := range t.Measurements {
-		result = append(result, Sprintf("%v: %s", Cyan(field), value))
-	}
-
-	if t.shouldPlot {
-		name := fmt.Sprintf("chart-%v", t.Suite)
-		fmt.Printf("Producing Chart %v\n", name)
-		t.chart(t.Records, name)
-	}
 	return strings.Join(result, "\n")
 }

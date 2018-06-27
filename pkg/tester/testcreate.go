@@ -7,15 +7,15 @@ import (
 	util "github.com/dispatchframework/benchmark/pkg/common"
 )
 
-func (t *TimeTests) MeasureSingleMake(name string) {
+func (t *Tester) MeasureSingleMake(name string) {
 	fmt.Println("Creating Single Function")
 	t.functions = append(t.functions, name)
 	start := time.Now()
 	util.CreateFunction(name, testFunc)
-	t.aggregator.RecordTime("Make Function", time.Since(start))
+	t.aggregator.RecordValue("Make Function", time.Since(start).Seconds())
 }
 
-func (t *TimeTests) TestFuncMakeSingle() {
+func (t *Tester) TestFuncMakeSingle() {
 	fmt.Println("Testing Make function")
 	t.aggregator.InitRecord("Make Function")
 	start := time.Now()
@@ -25,7 +25,7 @@ func (t *TimeTests) TestFuncMakeSingle() {
 	fmt.Printf("Total time: %v\n", time.Since(start))
 }
 
-func (t *TimeTests) TestFuncMakeSerial() {
+func (t *Tester) TestFuncMakeSerial() {
 	fmt.Println("Testing multiple function creation in series")
 	t.aggregator.InitRecord("Series Function")
 	start := time.Now()
@@ -36,14 +36,14 @@ func (t *TimeTests) TestFuncMakeSerial() {
 			t.functions = append(t.functions, name)
 			util.CreateFunction(name, testFunc)
 		}
-		t.aggregator.RecordTime("Series Function", time.Since(start))
+		t.aggregator.RecordValue("Series Function", time.Since(start).Seconds())
 	}
 }
 
-func (t *TimeTests) TestFuncMakeParallel() {
+func (t *Tester) TestFuncMakeParallel() {
 	fmt.Println("Testing Multiple Function Creation in Parallel")
-	record := func(len time.Duration) {
-		t.aggregator.RecordTime("Parallel Function", len)
+	record := func(len float64) {
+		t.aggregator.RecordValue("Parallel Function", len)
 	}
 	toRun := func(args ...string) {
 		if len(args) < 2 {

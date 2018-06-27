@@ -8,22 +8,21 @@ import (
 	"log"
 	"os"
 	"path"
-	"time"
 )
 
-func (t *TimeRecord) ToJson(output *os.File) {
+func (t *BenchmarkRecorder) ToJson(output *os.File) {
 	type jsonIntermediate struct {
-		Times []time.Duration
-		Stats struct {
+		Values []float64
+		Stats  struct {
 			Average float64
 			StdDev  float64
 		}
 	}
 	stats := make(map[string]jsonIntermediate)
-	for name, durations := range t.Records {
+	for name, samples := range t.Records {
 		var intermediate jsonIntermediate
-		mean, sDev := GetStats(durations)
-		intermediate.Times = durations
+		mean, sDev := GetStats(samples)
+		intermediate.Values = samples
 		intermediate.Stats.Average = mean
 		intermediate.Stats.StdDev = sDev
 		stats[name] = intermediate
@@ -46,17 +45,17 @@ func (t *TimeRecord) ToJson(output *os.File) {
 
 }
 
-func (t *TimeRecord) ToCsv(output *os.File) {
+func (t *BenchmarkRecorder) ToCsv(output *os.File) {
 	fmt.Printf("Outputting results to csv: %v\n", t.Output)
 	writer := csv.NewWriter(output)
 	defer writer.Flush()
-	for name, durations := range t.Records {
+	for name, samples := range t.Records {
 		var data []string
 		data = append(data, name)
-		for _, val := range durations {
+		for _, val := range samples {
 			data = append(data, fmt.Sprintf("%v", val))
 		}
-		mean, sDev := GetStats(durations)
+		mean, sDev := GetStats(samples)
 		data = append(data, fmt.Sprintf("%v", mean))
 		data = append(data, fmt.Sprintf("%v", sDev))
 		if err := writer.Write(data); err != nil {
@@ -67,7 +66,7 @@ func (t *TimeRecord) ToCsv(output *os.File) {
 
 }
 
-func (t *TimeRecord) OutToFile() {
+func (t *BenchmarkRecorder) OutToFile() {
 	var output *os.File
 	defer output.Close()
 	if _, err := os.Stat(t.Output); os.IsNotExist(err) {

@@ -3,18 +3,17 @@ package reporter
 import (
 	"bufio"
 	"os"
-	"time"
 
 	chart "github.com/wcharczuk/go-chart"
 )
 
-func SimplePlot(Records map[string][]time.Duration, name string) {
+func SimplePlot(Records map[string][]float64, name string) {
 	var series []chart.Series
-	for field, durations := range Records {
+	for field, samples := range Records {
 		var x, y []float64
-		for i, time := range durations {
+		for i, record := range samples {
 			x = append(x, float64(i))
-			y = append(y, time.Seconds())
+			y = append(y, record)
 		}
 		series = append(series, chart.ContinuousSeries{
 			Name:    field,
