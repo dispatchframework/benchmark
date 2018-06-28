@@ -33,7 +33,7 @@ type Tester struct {
 }
 
 func init() {
-	flag.StringVar(&output, "outFile",
+	flag.StringVar(&output, "output",
 		fmt.Sprintf("out-%v.csv", time.Now().Unix()),
 		"What file to output the results to")
 	flag.IntVar(&samples, "samples", 1, "Number of samples to be collected")

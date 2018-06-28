@@ -60,7 +60,7 @@ func (t *Tester) TestFuncMakeParallel() {
 	t.aggregator.AssignGraph("Creation", "Parallel Function")
 	// Doing this here to avoid race condition
 	for i := 0; i < samples; i++ {
-		for j := 0; j < samples; j++ {
+		for j := 0; j < runners; j++ {
 			t.functions = append(t.functions, fmt.Sprintf("parallel%v-%v", i, j))
 		}
 	}

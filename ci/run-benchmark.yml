@@ -93,4 +93,6 @@ run:
 
     ls $GOPATH
 
-    tester -samples=3 -function=./resources/functions/test.py
+    tester -output=result.json -samples=3 -function=./resources/functions/test.py
+
+    # curl -X POST "http://${DASHBOARD_HOST}/post-benchmark" -D "result.json"
