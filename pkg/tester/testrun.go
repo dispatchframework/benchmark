@@ -7,12 +7,12 @@ import (
 	util "github.com/dispatchframework/benchmark/pkg/common"
 )
 
-func (t *Tester) RunSingleFunction(name string) {
+func (t *Tester) RunSingleFunction(name, measurement string) {
 	start := time.Now()
 	util.ExecuteFunction(name)
 	duration := time.Since(start)
 	fmt.Printf("Single run: %v\n", duration.Seconds())
-	t.aggregator.RecordValue("Run Single Function", duration.Seconds())
+	t.aggregator.RecordValue(measurement, duration.Seconds())
 }
 
 func (t *Tester) CheckFuncExists(name string) bool {
@@ -26,8 +26,9 @@ func (t *Tester) CheckFuncExists(name string) bool {
 
 func (t *Tester) TestFuncRunSingle() {
 	fmt.Println("Testing Run function")
+	measurement := "Run Single Function"
 	t.aggregator.InitRecord("Run Single Function")
-	t.aggregator.AssignGraph("Execution", "Run Single Function")
+	t.aggregator.AssignGraph("Execution", measurement)
 	start := time.Now()
 	function := "RunFuncTest"
 	if !t.CheckFuncExists(function) {
@@ -35,15 +36,16 @@ func (t *Tester) TestFuncRunSingle() {
 		t.functions = append(t.functions, function)
 	}
 	for i := 0; i < samples; i++ {
-		t.RunSingleFunction(function)
+		t.RunSingleFunction(function, measurement)
 	}
 	fmt.Printf("Total time: %v\n", time.Since(start))
 }
 
 func (t *Tester) TestFuncRunSeries() {
 	fmt.Println("Testing multiple function running in series")
-	t.aggregator.InitRecord("Series Run Function")
-	t.aggregator.AssignGraph("Execution", "Series Run Function")
+	measurement := "Run Functions in Series"
+	t.aggregator.InitRecord(measurement)
+	t.aggregator.AssignGraph("Execution", measurement)
 	function := "RunFuncTest"
 	if !t.CheckFuncExists(function) {
 		util.CreateFunction(function, testFunc)
@@ -55,15 +57,16 @@ func (t *Tester) TestFuncRunSeries() {
 		for j := 0; j < 5; j++ {
 			util.ExecuteFunction(function)
 		}
-		t.aggregator.RecordValue("Series Run Function", time.Since(start).Seconds())
+		t.aggregator.RecordValue(measurement, time.Since(start).Seconds())
 	}
 }
 
 func (t *Tester) TestFuncRunParallel() {
 	fmt.Println("Testing Multiple Function Execution in Parallel")
+	measurement := "Run Functions in Parallel"
 	function := "RunFuncTest"
 	record := func(len float64) {
-		t.aggregator.RecordValue("Parallel Run Function", len)
+		t.aggregator.RecordValue(measurement, len)
 	}
 	if !t.CheckFuncExists(function) {
 		util.CreateFunction(function, testFunc)
@@ -75,8 +78,8 @@ func (t *Tester) TestFuncRunParallel() {
 		}
 		util.ExecuteFunction(function)
 	}
-	t.aggregator.InitRecord("Parallel Run Function")
-	t.aggregator.AssignGraph("Execution", "Parallel Run Function")
+	t.aggregator.InitRecord(measurement)
+	t.aggregator.AssignGraph("Execution", measurement)
 	for i := 0; i < samples; i++ {
 		args := []string{function, testFunc}
 		util.SyncRunRunners(toRun, record, 2, false, args...)

@@ -20,7 +20,7 @@ func (s *Tester) TestScaleTimes() {
 	s.functions = append(s.functions, function)
 	util.ExecuteFunction(function)
 	for j := 2; j <= limit; j *= 2 {
-		measurement := fmt.Sprintf("Scale Test %v runners", j)
+		measurement := fmt.Sprintf("Time to run %v functions in parallel", j)
 		s.aggregator.InitRecord(measurement)
 		s.aggregator.AssignGraph("Scale", measurement)
 		record := func(len float64) {

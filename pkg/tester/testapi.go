@@ -96,7 +96,7 @@ func (t *Tester) TestApiThroughput() {
 	}
 	for j := 1; j < maxRunners; j++ {
 		runners := j
-		test := fmt.Sprintf("Functions in 1 Second with %v Runners", runners)
+		test := fmt.Sprintf("Number of Functions run in 1 Second with %v parallel runners", runners)
 		t.aggregator.InitRecord(test)
 		t.aggregator.AssignGraph("Api", test)
 		stop = 0

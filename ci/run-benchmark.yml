@@ -10,6 +10,7 @@ image_resource:
 params:
   GKE_KEY:
   GKE_PROJECT_ID:
+  DASHBOARD_HOST:
 
 inputs:
 - name: benchmark
@@ -95,4 +96,6 @@ run:
 
     tester -output=result.json -samples=3 -function=./resources/functions/test.py
 
-    # curl -X POST "http://${DASHBOARD_HOST}/post-benchmark" -D "result.json"
+    data=`cat result.json`
+
+    curl -X POST "http://${DASHBOARD_HOST}/post-benchmark" -H "Content-Type: application/json" -d ''"$data"''
