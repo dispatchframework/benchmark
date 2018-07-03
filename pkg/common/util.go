@@ -80,6 +80,10 @@ func CreateFunction(funcName, funcLocation string) {
 		}
 	}
 	fmt.Printf("Created function %v\n", funcName)
+	fmt.Println("Running once to negate zero-scaling")
+	if err := ExecuteFunction(funcName); err != nil {
+		log.Fatalf("Failed to run function %v. %v", funcName, err)
+	}
 }
 
 func DeleteFunction(funcName string) error {
