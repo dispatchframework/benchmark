@@ -7,7 +7,7 @@ import (
 	util "github.com/dispatchframework/benchmark/pkg/common"
 )
 
-func (t *Tester) MeasureSingleMake(name, measurement string) {
+func (t *Tester) measureSingleMake(name, measurement string) {
 	fmt.Println("Creating Single Function")
 	t.functions = append(t.functions, name)
 	start := time.Now()
@@ -15,6 +15,7 @@ func (t *Tester) MeasureSingleMake(name, measurement string) {
 	t.aggregator.RecordValue(measurement, time.Since(start).Seconds())
 }
 
+// TestFuncMakeSingle measures the amount of time it takes to make a single function
 func (t *Tester) TestFuncMakeSingle() {
 	fmt.Println("Testing Make function")
 	measurement := "Single Function Creation"
@@ -22,11 +23,12 @@ func (t *Tester) TestFuncMakeSingle() {
 	t.aggregator.AssignGraph("Creation", measurement)
 	start := time.Now()
 	for i := 0; i < samples; i++ {
-		t.MeasureSingleMake(fmt.Sprintf("testFunc%v", i), measurement)
+		t.measureSingleMake(fmt.Sprintf("testFunc%v", i), measurement)
 	}
 	fmt.Printf("Total time: %v\n", time.Since(start))
 }
 
+// TestFuncMakeSerial measures the time it takes to make many functions in series
 func (t *Tester) TestFuncMakeSerial() {
 	fmt.Println("Testing multiple function creation in series")
 	measurement := "Series Function Creation"
@@ -44,9 +46,10 @@ func (t *Tester) TestFuncMakeSerial() {
 	}
 }
 
+// TestFuncMakeParallel measures the time it takes to make many functions in parallel
 func (t *Tester) TestFuncMakeParallel() {
 	fmt.Println("Testing Multiple Function Creation in Parallel")
-	runners := 2
+	runners := 5
 	measurement := "Parallel Function Creation"
 	record := func(len float64) {
 		t.aggregator.RecordValue(measurement, len)

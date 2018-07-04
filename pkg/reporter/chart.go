@@ -8,6 +8,7 @@ import (
 	chart "github.com/wcharczuk/go-chart"
 )
 
+// SeriesPlot formats the records correctly for go-chart series plot to handle
 func SeriesPlot(Records map[string][]float64, name string) {
 	var series []chart.Series
 	for field, samples := range Records {
@@ -23,10 +24,10 @@ func SeriesPlot(Records map[string][]float64, name string) {
 		})
 	}
 	name = fmt.Sprintf("%v-chart.png", name)
-	PlotSeries(series, name)
+	plotSeries(series, name)
 }
 
-func PlotSeries(series []chart.Series, name string) {
+func plotSeries(series []chart.Series, name string) {
 	graph := chart.Chart{
 		XAxis: chart.XAxis{
 			Style: chart.Style{Show: true},
@@ -50,6 +51,7 @@ func PlotSeries(series []chart.Series, name string) {
 	_ = graph.Render(chart.PNG, writer)
 }
 
+// BarPlot formats the records correctly for go-chart bar plot to handle
 func BarPlot(Records map[string][]float64, name string) {
 	var bars []chart.Value
 	for field, samples := range Records {
@@ -60,10 +62,10 @@ func BarPlot(Records map[string][]float64, name string) {
 		})
 	}
 	name = fmt.Sprintf("%v-chart.png", name)
-	PlotBar(bars, name)
+	plotBar(bars, name)
 }
 
-func PlotBar(bars []chart.Value, name string) {
+func plotBar(bars []chart.Value, name string) {
 	graph := chart.BarChart{
 		Title:      name,
 		TitleStyle: chart.StyleShow(),

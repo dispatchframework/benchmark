@@ -6,21 +6,20 @@ import (
 	"time"
 )
 
+// Runner runs a given function once. Multiple runners will start at the same time
 func Runner(toRun func(...string), wg, start *sync.WaitGroup, args ...string) {
-	// func Runner(toRun func(...string), arg1, arg2 string, wg, start *sync.WaitGroup) {
 	wg.Done()
 	start.Wait()
 	toRun(args...)
 	wg.Done()
 }
 
+// SyncRunRunners creates and starts a number of runners. It also records values after those runners have finished
 func SyncRunRunners(toRun func(...string), record func(float64), runners int, create bool, args ...string) {
-	// func SyncRunRunners(toRun func(...string), location string, runners int, record func(time.Duration), iteration int) []string {
 	var wg sync.WaitGroup
 	var startWg sync.WaitGroup
 	start := time.Now()
 	startWg.Add(runners)
-	// Creation Of Runners Step
 	for i := 0; i < runners; i++ {
 		wg.Add(1)
 		newArgs := make([]string, len(args))

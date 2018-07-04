@@ -4,53 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand"
 	"os/exec"
 	"path"
-	"time"
 )
 
-type ExecInfo struct {
-	ExecutedTime float64
-	FinishedTime float64
-	Name         string
-}
-
-type Run struct {
-	Name         string
-	ExecutedTime float64
-	FinishedTime float64
-	Status       string
-	Logs         struct {
-		Stderr string
-		Stdout []string
-	}
-}
-
-func RandomName(n int) string {
-	var seededRand *rand.Rand = rand.New(
-		rand.NewSource(time.Now().UnixNano()))
-	var letter = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letter[seededRand.Intn(len(letter))]
-	}
-	return string(b)
-}
-
-// cmd := exec.Command("dispatch", "get", "function", name, "--json", "--insecure")
-// fmt.Println("Making Request")
-// output, err := cmd.Output()
-// fmt.Println("Got response")
-// if err != nil {
-// 	panic("Couldn't get function info")
-// }
-// if err := json.Unmarshal(output, &fn); err != nil {
-// 	panic("Unable to marshal json")
-// }
-// return fn.Status
-
+// CreateFunction wraps dispatch's create function method, waits until function is ready to execute before it returns
 func CreateFunction(funcName, funcLocation string) {
 	_, file := path.Split(funcLocation)
 	handler := fmt.Sprintf("--handler=%s.handle", file[0:len(file)-len(path.Ext(funcLocation))])
@@ -86,6 +44,7 @@ func CreateFunction(funcName, funcLocation string) {
 	}
 }
 
+// DeleteFunction wraps dispatch's delete function command
 func DeleteFunction(funcName string) error {
 	cmd := exec.Command("dispatch", "delete", "function", funcName)
 	_, err := cmd.Output()
@@ -96,6 +55,7 @@ func DeleteFunction(funcName string) error {
 	return err
 }
 
+// ExecuteFunction runs a function once
 func ExecuteFunction(funcName string) error {
 	cmd := exec.Command("dispatch", "exec", funcName, "--wait")
 	output, err := cmd.CombinedOutput()
@@ -103,29 +63,11 @@ func ExecuteFunction(funcName string) error {
 		log.Printf("Unable to run function: %v, \n%s\n", err, output)
 		return err
 	}
-	var result ExecInfo
-	if err := json.Unmarshal(output, &result); err != nil {
-		log.Printf("Unable to unmarshal the result\n")
-		return err
-	}
 	return nil
 }
 
-// func GetPodStatus(podName, ns string) string {
-// 	var podStats struct {
-// 		Status string
-// 	}
-// 	get := exec.Command("kubectl", "-n", ns, "describe", "pod", podName)
-// 	output, err := get.CombinedOutput()
-// 	if err != nil {
-// 		log.Fatalf("Error getting status: %v. \n%s", err, output)
-// 	}
-// 	fmt.Printf("output: %s\n", output)
-// 	json.Unmarshal(output, &podStats)
-// 	return podStats.Status
-// }
-
-func SetupApi(name, target, path string) {
+// SetupAPI creates an api endpoint for the target function
+func SetupAPI(name, target, path string) {
 	fmt.Printf("Creating endpoint %v\n", name)
 	createEndpoint := exec.Command("dispatch", "create", "api", "--method", "POST", "--path", fmt.Sprintf("/%v", path), name, target)
 	output, err := createEndpoint.CombinedOutput()
@@ -148,7 +90,8 @@ func SetupApi(name, target, path string) {
 	fmt.Printf("Created Endpoint: %v\n", name)
 }
 
-func QueryApi(url, payload string) []byte {
+// QueryAPI curls the specified url, posting a payload
+func QueryAPI(url, payload string) []byte {
 	queryEndpoint := exec.Command(
 		"curl", "-k", url,
 		"-H", "Content-Type: application/json",
@@ -156,7 +99,7 @@ func QueryApi(url, payload string) []byte {
 	)
 	output, err := queryEndpoint.CombinedOutput()
 	if err != nil {
-		log.Fatalf("Failure when querying api endpoint. %v\n%s", err, output)
+		log.Fatalf("Failure when querying API endpoint. %v\n%s", err, output)
 	}
 	return output
 }

@@ -7,7 +7,7 @@ import (
 	util "github.com/dispatchframework/benchmark/pkg/common"
 )
 
-func (t *Tester) RunSingleFunction(name, measurement string) {
+func (t *Tester) runSingleFunction(name, measurement string) {
 	start := time.Now()
 	util.ExecuteFunction(name)
 	duration := time.Since(start)
@@ -15,6 +15,7 @@ func (t *Tester) RunSingleFunction(name, measurement string) {
 	t.aggregator.RecordValue(measurement, duration.Seconds())
 }
 
+// CheckFuncExists checks whether or not a given function has already been created
 func (t *Tester) CheckFuncExists(name string) bool {
 	for _, f := range t.functions {
 		if f == name {
@@ -24,6 +25,7 @@ func (t *Tester) CheckFuncExists(name string) bool {
 	return false
 }
 
+// TestFuncRunSingle just runs a function once and measures how long it takes
 func (t *Tester) TestFuncRunSingle() {
 	fmt.Println("Testing Run function")
 	measurement := "Run Single Function"
@@ -36,11 +38,12 @@ func (t *Tester) TestFuncRunSingle() {
 		t.functions = append(t.functions, function)
 	}
 	for i := 0; i < samples; i++ {
-		t.RunSingleFunction(function, measurement)
+		t.runSingleFunction(function, measurement)
 	}
 	fmt.Printf("Total time: %v\n", time.Since(start))
 }
 
+// TestFuncRunSeries just runs a function multiple times in series and measures how long it takes
 func (t *Tester) TestFuncRunSeries() {
 	fmt.Println("Testing multiple function running in series")
 	measurement := "Run Functions in Series"
@@ -61,6 +64,7 @@ func (t *Tester) TestFuncRunSeries() {
 	}
 }
 
+// TestFuncRunParallel just runs a function multiple times in parallel and measures how long it takes
 func (t *Tester) TestFuncRunParallel() {
 	fmt.Println("Testing Multiple Function Execution in Parallel")
 	measurement := "Run Functions in Parallel"
@@ -82,6 +86,6 @@ func (t *Tester) TestFuncRunParallel() {
 	t.aggregator.AssignGraph("Execution", measurement)
 	for i := 0; i < samples; i++ {
 		args := []string{function, testFunc}
-		util.SyncRunRunners(toRun, record, 2, false, args...)
+		util.SyncRunRunners(toRun, record, 5, false, args...)
 	}
 }

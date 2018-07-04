@@ -12,12 +12,11 @@ import (
 	"time"
 
 	"github.com/dispatchframework/benchmark/pkg/reporter"
-	. "github.com/logrusorgru/aurora"
+	"github.com/logrusorgru/aurora"
 )
 
 var (
-	testsRun  []string
-	Functions []string
+	testsRun []string
 	// Flags to control how the tests are run
 	samples  int
 	testFunc string
@@ -25,6 +24,7 @@ var (
 	apiIP    string
 )
 
+// Tester is the overarching type that is used to run tests
 type Tester struct {
 	name       string
 	functions  []string
@@ -42,6 +42,7 @@ func init() {
 		"What function to use to test")
 }
 
+// Cleanup cleans up all the remnants of tests, such as functions and api endpoints
 func (t *Tester) Cleanup() {
 	fmt.Println("Cleaning up")
 	fmt.Printf("Functions to be cleaned: %v\n", t.functions)
@@ -68,7 +69,7 @@ func callMethods(t *Tester, rx *regexp.Regexp) {
 		method := reflect.TypeOf(t).Method(i)
 		name := method.Name
 		if rx.MatchString(name) {
-			fmt.Printf("\n\n[%v]\n\n", Green(name))
+			fmt.Printf("\n\n[%v]\n\n", aurora.Green(name))
 			reflect.ValueOf(t).MethodByName(name).Call(nil)
 		}
 	}
@@ -89,7 +90,7 @@ func main() {
 		"Scale":     reporter.SeriesPlot,
 		"Api":       reporter.BarPlot,
 	}
-	rx := regexp.MustCompile(testsMatcher)
+	rx := regexp.MustCompile(fmt.Sprintf("(?i)%s", testsMatcher))
 	testRecorder := reporter.NewReporter("TestTime", output)
 	testRecorder.Graphs = graphs
 	tests := &Tester{

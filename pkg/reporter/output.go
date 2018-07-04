@@ -11,21 +11,22 @@ import (
 	"time"
 )
 
-func (t *BenchmarkRecorder) ToJson(output *os.File) {
-	type jsonIntermediate struct {
+// ToJSON outputs all the recorded values to a JSON file. Intended use is for uploading to GCloud for parsing
+func (t *BenchmarkRecorder) ToJSON(output *os.File) {
+	type JSONIntermediate struct {
 		Values      []float64 `json:"values"`
 		Average     float64   `json:"average"`
 		Measurement string    `json:"measurement"`
 	}
 
 	type BenchmarkReport struct {
-		Tests     []jsonIntermediate `json:"tests"`
+		Tests     []JSONIntermediate `json:"tests"`
 		Timestamp string             `json:"timestamp"`
 	}
 	var report BenchmarkReport
 	report.Timestamp = fmt.Sprintf("%v", time.Now().Unix())
 	for name, samples := range t.Records {
-		var intermediate jsonIntermediate
+		var intermediate JSONIntermediate
 		mean, _ := GetStats(samples)
 		intermediate.Values = samples
 		intermediate.Average = mean
@@ -46,6 +47,7 @@ func (t *BenchmarkRecorder) ToJson(output *os.File) {
 
 }
 
+// ToCsv outputs the recorded values as a csv file. Intended use is for later graphing/data analysis
 func (t *BenchmarkRecorder) ToCsv(output *os.File) {
 	fmt.Printf("Outputting results to csv: %v\n", t.Output)
 	writer := csv.NewWriter(output)
@@ -67,6 +69,7 @@ func (t *BenchmarkRecorder) ToCsv(output *os.File) {
 
 }
 
+// OutToFile outputs the results to a file, either csv or JSON
 func (t *BenchmarkRecorder) OutToFile() {
 	var output *os.File
 	defer output.Close()
@@ -80,7 +83,7 @@ func (t *BenchmarkRecorder) OutToFile() {
 	}
 	switch ext := path.Ext(t.Output); ext {
 	case ".json":
-		t.ToJson(output)
+		t.ToJSON(output)
 	case ".csv":
 		t.ToCsv(output)
 	}
