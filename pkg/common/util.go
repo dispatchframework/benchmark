@@ -13,7 +13,7 @@ func CreateFunction(funcName, funcLocation string) {
 	_, file := path.Split(funcLocation)
 	handler := fmt.Sprintf("--handler=%s.handle", file[0:len(file)-len(path.Ext(funcLocation))])
 	cmd := exec.Command("dispatch", "create", "function", funcName, funcLocation, "--image=python3", handler)
-	output, err := cmd.CombinedOutput()
+  output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Printf("Failed to create function %v. %v\n%s\n", funcName, err, output)
 		panic("Unable to create function")

@@ -13,6 +13,7 @@ import (
 )
 
 func init() {
+	// Get the ip for API
 	fmt.Println("[Getting the IP address of the API server]")
 	query := exec.Command("kubectl", "-n", "kong",
 		"get", "service", "api-gateway-kongproxy", "-o=json")
@@ -24,7 +25,7 @@ func init() {
 		Status struct {
 			LoadBalancer struct {
 				Ingress []struct {
-					IP string
+          IP string
 				}
 			}
 		}
