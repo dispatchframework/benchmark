@@ -7,29 +7,33 @@ import (
 	util "github.com/dispatchframework/benchmark/pkg/common"
 )
 
-func (t *Tester) MeasureSingleMake(name string) {
+func (t *Tester) measureSingleMake(name, measurement string) {
 	fmt.Println("Creating Single Function")
 	t.functions = append(t.functions, name)
 	start := time.Now()
 	util.CreateFunction(name, testFunc)
-	t.aggregator.RecordValue("Make Function", time.Since(start).Seconds())
+	t.aggregator.RecordValue(measurement, time.Since(start).Seconds())
 }
 
+// TestFuncMakeSingle measures the amount of time it takes to make a single function
 func (t *Tester) TestFuncMakeSingle() {
 	fmt.Println("Testing Make function")
-	t.aggregator.InitRecord("Make Function")
-	t.aggregator.AssignGraph("Creation", "Make Function")
+	measurement := "Single Function Creation"
+	t.aggregator.InitRecord(measurement)
+	t.aggregator.AssignGraph("Creation", measurement)
 	start := time.Now()
 	for i := 0; i < samples; i++ {
-		t.MeasureSingleMake(fmt.Sprintf("testFunc%v", i))
+		t.measureSingleMake(fmt.Sprintf("testFunc%v", i), measurement)
 	}
 	fmt.Printf("Total time: %v\n", time.Since(start))
 }
 
+// TestFuncMakeSerial measures the time it takes to make many functions in series
 func (t *Tester) TestFuncMakeSerial() {
 	fmt.Println("Testing multiple function creation in series")
-	t.aggregator.InitRecord("Series Function")
-	t.aggregator.AssignGraph("Creation", "Series Function")
+	measurement := "Series Function Creation"
+	t.aggregator.InitRecord(measurement)
+	t.aggregator.AssignGraph("Creation", measurement)
 	start := time.Now()
 	for i := 0; i < samples; i++ {
 		start = time.Now()
@@ -38,14 +42,17 @@ func (t *Tester) TestFuncMakeSerial() {
 			t.functions = append(t.functions, name)
 			util.CreateFunction(name, testFunc)
 		}
-		t.aggregator.RecordValue("Series Function", time.Since(start).Seconds())
+		t.aggregator.RecordValue(measurement, time.Since(start).Seconds())
 	}
 }
 
+// TestFuncMakeParallel measures the time it takes to make many functions in parallel
 func (t *Tester) TestFuncMakeParallel() {
 	fmt.Println("Testing Multiple Function Creation in Parallel")
+	runners := 5
+	measurement := "Parallel Function Creation"
 	record := func(len float64) {
-		t.aggregator.RecordValue("Parallel Function", len)
+		t.aggregator.RecordValue(measurement, len)
 	}
 	toRun := func(args ...string) {
 		if len(args) < 2 {
@@ -53,13 +60,18 @@ func (t *Tester) TestFuncMakeParallel() {
 		}
 		name := args[0]
 		location := args[1]
-		t.functions = append(t.functions, name)
 		util.CreateFunction(name, location)
 	}
-	t.aggregator.InitRecord("Parallel Function")
-	t.aggregator.AssignGraph("Creation", "Parallel Function")
+	t.aggregator.InitRecord(measurement)
+	t.aggregator.AssignGraph("Creation", measurement)
+	// Doing this here to avoid race condition
+	for i := 0; i < samples; i++ {
+		for j := 0; j < runners; j++ {
+			t.functions = append(t.functions, fmt.Sprintf("parallel%v-%v", i, j))
+		}
+	}
 	for i := 0; i < samples; i++ {
 		args := []string{fmt.Sprintf("parallel%v", i), testFunc}
-		util.SyncRunRunners(toRun, record, 2, true, args...)
+		util.SyncRunRunners(toRun, record, runners, true, args...)
 	}
 }

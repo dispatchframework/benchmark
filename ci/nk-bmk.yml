@@ -1,0 +1,30 @@
+---
+resources:
+- name: benchmark-master
+  type: git
+  source:
+    uri: https://github.com/dispatchframework/benchmark.git
+    branch: nkaashoek-updateci
+- name: dispatch-master
+  type: git
+  source:
+    uri: https://github.com/vmware/dispatch.git
+    branch: master
+
+
+    
+jobs:
+- name: benchmarker
+  public: true
+  plan:
+  - aggregate:
+    - get: benchmark
+      resource: benchmark-master
+    - get: dispatch
+      resource: dispatch-master
+  - task: build-cli
+    file: dispatch/ci/e2e/build-cli.yml
+  - task: build-benchmark
+    file: benchmark/ci/make-benchmark.yml
+  - task: run-benchmark
+    file: benchmark/ci/run-benchmark.yml

@@ -1,0 +1,36 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: vmware/dispatch-golang-ci
+    tag: "1.10"
+
+inputs:
+- name: benchmark
+  path: src/github.com/dispatchframework/benchmark
+
+outputs:
+- name: benchmark-runner
+
+run:
+  path: /bin/bash
+  args:
+  - -c
+  - |
+    set -e -u -x
+
+    export GOPATH=$PWD
+
+    export PATH=$PATH:$GOPATH/bin
+
+    mkdir -p benchmark-runner
+
+    cd src/github.com/dispatchframework/benchmark
+    
+    make install
+ 
+    mv $GOPATH/bin/tester $GOPATH/benchmark-runner
+
+    echo Finished!

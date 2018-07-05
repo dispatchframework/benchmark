@@ -28,7 +28,3 @@
 [prune]
   go-tests = true
   unused-packages = true
-
-[[constraint]]
-  name = "github.com/onsi/ginkgo"
-  version = "1.5.0"

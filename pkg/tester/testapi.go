@@ -25,7 +25,7 @@ func init() {
 		Status struct {
 			LoadBalancer struct {
 				Ingress []struct {
-					Ip string
+          IP string
 				}
 			}
 		}
@@ -34,61 +34,57 @@ func init() {
 	if err != nil {
 		log.Fatalf("Unable to unmarshal json %v\n", err)
 	}
-	apiIP = IPstruct.Status.LoadBalancer.Ingress[0].Ip
+	apiIP = IPstruct.Status.LoadBalancer.Ingress[0].IP
 	fmt.Printf("Got the IP: %v\n", apiIP)
 }
 
-func (t *Tester) ApiBaseline() string {
-	var api string
-	if len(t.functions) <= 0 {
+func (t *Tester) setupAPIBaseline() string {
+	api := "testAPI"
+	if !t.CheckFuncExists("TargetFunc") {
 		util.CreateFunction("TargetFunc", testFunc)
 		t.functions = append(t.functions, "TargetFunc")
-	}
-
-	if len(t.apis) > 0 {
-		api = t.apis[0]
-	} else {
-		api = "testApi"
 		t.apis = append(t.apis, api)
-		util.SetupApi(api, "TargetFunc", api)
+		util.SetupAPI(api, "TargetFunc", api)
 	}
 	return api
 }
 
-func (t *Tester) CompareApiExec() {
-	api := t.ApiBaseline()
-	t.aggregator.InitRecord("CompareApiExec")
-	t.aggregator.InitRecord("Api Times")
-	t.aggregator.InitRecord("Function Times")
+// TestAPIvsExec measures the difference between doing dispatch exec vs. curl-ing an api endpoint
+func (t *Tester) TestAPIvsExec() {
+	api := t.setupAPIBaseline()
+	measurement := "Measuring API Runtimes vs. Direct function execution times"
+	t.aggregator.InitRecord(measurement)
+	t.aggregator.InitRecord("API Execution Times")
+	t.aggregator.InitRecord("Function Execution Times")
 	start := time.Now()
 	url := fmt.Sprintf("http://%v:80/%v", apiIP, api)
-	_ = util.ExecuteFunction("TargetFunc")
 	for i := 0; i < samples; i++ {
-		startApi := time.Now()
-		_ = util.QueryApi(url, `{}`)
-		apiDuration := time.Since(startApi)
-		t.aggregator.RecordValue("Api Times", apiDuration.Seconds())
+		startAPI := time.Now()
+		_ = util.QueryAPI(url, `{}`)
+		apiDuration := time.Since(startAPI)
+		t.aggregator.RecordValue("API Execution Times", apiDuration.Seconds())
 		startExec := time.Now()
 		_ = util.ExecuteFunction("TargetFunc")
 		funcDuration := time.Since(startExec)
-		t.aggregator.RecordValue("Function Times", funcDuration.Seconds())
-		t.aggregator.RecordValue("CompareApiExec",
+		t.aggregator.RecordValue("Function Execution Times", funcDuration.Seconds())
+		t.aggregator.RecordValue(measurement,
 			apiDuration.Seconds()-funcDuration.Seconds())
 	}
 	fmt.Printf("Total time: %v", time.Since(start).Seconds())
 }
 
-func (t *Tester) ApiMeasureThroughput() {
+// TestAPIThroughput measures how many function requests can make it through in 1 second
+func (t *Tester) TestAPIThroughput() {
 	var wg sync.WaitGroup
 	maxRunners := 6
-	api := t.ApiBaseline()
+	api := t.setupAPIBaseline()
 	record := func(value float64) {
 		return
 	}
 	counter := 0
 	stop := int64(0)
 	url := fmt.Sprintf("http://%v:80/%v", apiIP, api)
-	_ = util.QueryApi(url, `{}`)
+	_ = util.QueryAPI(url, `{}`)
 	toRun := func(args ...string) {
 		wg.Done()
 		for {
@@ -96,13 +92,13 @@ func (t *Tester) ApiMeasureThroughput() {
 			if val != 0 {
 				break
 			}
-			util.QueryApi(url, `{}`)
+			util.QueryAPI(url, `{}`)
 			counter++
 		}
 	}
 	for j := 1; j < maxRunners; j++ {
 		runners := j
-		test := fmt.Sprintf("Functions in 1 Second with %v Runners", runners)
+		test := fmt.Sprintf("Number of Functions run in 1 Second with %v parallel runners", runners)
 		t.aggregator.InitRecord(test)
 		t.aggregator.AssignGraph("Api", test)
 		stop = 0

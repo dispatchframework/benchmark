@@ -12,12 +12,11 @@ import (
 	"time"
 
 	"github.com/dispatchframework/benchmark/pkg/reporter"
-	. "github.com/logrusorgru/aurora"
+	"github.com/logrusorgru/aurora"
 )
 
 var (
-	testsRun  []string
-	Functions []string
+	testsRun []string
 	// Flags to control how the tests are run
 	samples  int
 	testFunc string
@@ -25,6 +24,7 @@ var (
 	apiIP    string
 )
 
+// Tester is the overarching type that is used to run tests
 type Tester struct {
 	name       string
 	functions  []string
@@ -33,7 +33,7 @@ type Tester struct {
 }
 
 func init() {
-	flag.StringVar(&output, "outFile",
+	flag.StringVar(&output, "output",
 		fmt.Sprintf("out-%v.csv", time.Now().Unix()),
 		"What file to output the results to")
 	flag.IntVar(&samples, "samples", 1, "Number of samples to be collected")
@@ -42,6 +42,7 @@ func init() {
 		"What function to use to test")
 }
 
+// Cleanup cleans up all the remnants of tests, such as functions and api endpoints
 func (t *Tester) Cleanup() {
 	fmt.Println("Cleaning up")
 	fmt.Printf("Functions to be cleaned: %v\n", t.functions)
@@ -68,11 +69,10 @@ func callMethods(t *Tester, rx *regexp.Regexp) {
 		method := reflect.TypeOf(t).Method(i)
 		name := method.Name
 		if rx.MatchString(name) {
-			fmt.Printf("\n\n[%v]\n\n", Green(name))
+			fmt.Printf("\n\n[%v]\n\n", aurora.Green(name))
 			reflect.ValueOf(t).MethodByName(name).Call(nil)
 		}
 	}
-	t.Cleanup()
 }
 
 func main() {
@@ -82,7 +82,7 @@ func main() {
 	if len(args) > 0 {
 		testsMatcher = args[0]
 	} else {
-		testsMatcher = ".+"
+		testsMatcher = "Test"
 	}
 	graphs := map[string]func(map[string][]float64, string){
 		"Creation":  reporter.SeriesPlot,
@@ -90,13 +90,14 @@ func main() {
 		"Scale":     reporter.SeriesPlot,
 		"Api":       reporter.BarPlot,
 	}
-	rx := regexp.MustCompile(testsMatcher)
+	rx := regexp.MustCompile(fmt.Sprintf("(?i)%s", testsMatcher))
 	testRecorder := reporter.NewReporter("TestTime", output)
 	testRecorder.Graphs = graphs
 	tests := &Tester{
 		name:       "TimeTester",
 		aggregator: testRecorder,
 	}
+	defer tests.Cleanup()
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -105,7 +106,6 @@ func main() {
 			tests.Cleanup()
 		}
 	}()
-	fmt.Printf("Graphs: %v\n", testRecorder.Graphs)
 	callMethods(tests, rx)
 	fmt.Println(tests.aggregator.PrintResults())
 }
