@@ -98,4 +98,4 @@ run:
 
     data=`cat result.json`
 
-    curl -X POST "http://${DASHBOARD_HOST}/post-benchmark" -H "Content-Type: application/json" -d ''"$data"''
+    curl -X POST "http://${DASHBOARD_HOST}/dispatch/post-benchmark" -H "Content-Type: application/json" -d ''"$data"''
